@@ -1,0 +1,4 @@
+[root]
+name = "rust-risc-v-simulator"
+version = "0.1.0"
+
