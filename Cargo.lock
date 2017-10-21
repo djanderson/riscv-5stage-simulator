@@ -1,4 +1,4 @@
 [root]
-name = "rust-risc-v-simulator"
+name = "riscv-5stage-simulator"
 version = "0.1.0"
 

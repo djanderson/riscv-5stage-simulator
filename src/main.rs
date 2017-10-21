@@ -1,17 +1,17 @@
-extern crate rust_risc_v_simulator;
+extern crate riscv_5stage_simulator;
 
-use rust_risc_v_simulator::instruction::Instruction;
-use rust_risc_v_simulator::memory::MainMemory;
-use rust_risc_v_simulator::register::RegisterFile;
+use riscv_5stage_simulator::instruction::Instruction;
+use riscv_5stage_simulator::memory::MainMemory;
+use riscv_5stage_simulator::register::RegisterFile;
 
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 
 
-const GUARD_INSTRUCTION: u32 = 0;
+const GUARD_INSTRUCTION: u32 = 0xffffffff;
 const LOGO: &str = "
-Rust RISC-V Simulator
+RISC-V 5-Stage Simulator
 
               vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
                   vvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -56,6 +56,9 @@ fn main() {
     let mut reg = RegisterFile::new(0x0);
 
     let word = 4;
+
+    // FIXME:
+    mem.write(0, 4, 0xffffffff);
 
     loop {
         let pc = reg.pc.read() as usize;
