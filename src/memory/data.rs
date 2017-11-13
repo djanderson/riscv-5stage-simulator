@@ -1,11 +1,11 @@
-pub struct MainMemory {
+pub struct DataMemory {
     mem: Box<[u32]>
 }
 
 
-impl MainMemory {
-    pub fn new(nwords: usize) -> MainMemory {
-        MainMemory {
+impl DataMemory {
+    pub fn new(nwords: usize) -> DataMemory {
+        DataMemory {
             mem: vec![0u32; nwords].into_boxed_slice()
         }
     }
@@ -71,12 +71,12 @@ mod tests {
 
     #[test]
     fn common_constructor() {
-        MainMemory::new(1024);
+        DataMemory::new(1024);
     }
 
     #[test]
     fn byte1() {
-        let mut mem = MainMemory::new(2);
+        let mut mem = DataMemory::new(2);
         let mut addr = 0x0;
         let mut size = 1;
 
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn byte2() {
-        let mut mem = MainMemory::new(2);
+        let mut mem = DataMemory::new(2);
         let mut addr = 0x1;
         let mut size = 1;
 
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn byte3() {
-        let mut mem = MainMemory::new(2);
+        let mut mem = DataMemory::new(2);
         let mut addr = 0x2;
         let mut size = 1;
 
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn byte4() {
-        let mut mem = MainMemory::new(2);
+        let mut mem = DataMemory::new(2);
         let mut addr = 0x3;
         let mut size = 1;
 
@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn lower_halfword() {
-        let mut mem = MainMemory::new(2);
+        let mut mem = DataMemory::new(2);
         let addr = 0x4;
         let size = 2;
 
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn upper_halfword() {
-        let mut mem = MainMemory::new(2);
+        let mut mem = DataMemory::new(2);
         let addr = 0x6;
         let size = 2;
 
@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn full_word() {
-        let mut mem = MainMemory::new(2);
+        let mut mem = DataMemory::new(2);
         let addr = 0x4;
         let size = 4;
 
@@ -162,7 +162,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn unaligned_halfword() {
-        let mem = MainMemory::new(2);
+        let mem = DataMemory::new(2);
         let addr = 0x3;
         let size = 2;
         // Attempt to read addrs 0x3 and 0x4, which crosses a word boundary
@@ -172,7 +172,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn unaligned_word() {
-        let mem = MainMemory::new(2);
+        let mem = DataMemory::new(2);
         let addr = 0x2;
         let size = 4;
         // Attempt to read addrs 0x2 through 0x5, which crosses a word boundary
@@ -183,7 +183,7 @@ mod tests {
     #[should_panic]
     fn read_outside_range() {
         // Create a 2-word memory space with valid addresses 0x0 through 0x7
-        let mem = MainMemory::new(2);
+        let mem = DataMemory::new(2);
         // Try to read memory address 0x8
         let addr = 0x8;
         let size = 1;
@@ -194,7 +194,7 @@ mod tests {
     #[should_panic]
     fn write_outside_range() {
         // Create a 2-word memory space with valid addresses 0x0 through 0x7
-        let mut mem = MainMemory::new(2);
+        let mut mem = DataMemory::new(2);
         // Try to write to memory address 0x8
         let addr = 0x8;
         let size = 1;

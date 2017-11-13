@@ -2,7 +2,8 @@ pub mod decoder;
 pub mod semantics;
 
 
-const OPCODE_MASK: u32 = 0x7f;
+pub const GUARD_INSTRUCTION: u32 = 0xffffffff;
+pub const OPCODE_MASK: u32 = 0x7f;
 
 
 #[derive(Debug)]
@@ -124,6 +125,34 @@ pub enum Format {
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+pub enum AluOp {
+    Add,
+    Sub,
+}
+
+
+impl Default for AluOp {
+    fn default() -> AluOp {
+        AluOp::Add
+    }
+}
+
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum AluSrc {
+    Reg,
+    Imm,
+}
+
+
+impl Default for AluSrc {
+    fn default() -> AluSrc {
+        AluSrc::Reg
+    }
+}
+
+
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Function {
     Nop, // No op
     Lui, // Load upper immediate
@@ -178,6 +207,6 @@ pub struct Semantics {
     pub mem_read: bool,
     pub mem_write: bool,
     pub mem_to_reg: bool,
-    pub alu_src: u32,
-    pub alu_op: u32,
+    pub alu_src: AluSrc,
+    pub alu_op: AluOp,
 }

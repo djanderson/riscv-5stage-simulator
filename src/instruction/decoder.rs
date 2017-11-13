@@ -29,6 +29,7 @@ pub fn decode(insn: &mut Instruction) {
     };
 
     insn.function = insn_to_fn(insn);
+    insn.semantics = insn_to_semantics(insn);
 }
 
 
@@ -75,6 +76,18 @@ fn insn_to_fn(insn: &Instruction) -> Function {
         (Opcode::Op, 0b111, _) => Function::And,
         _ => panic!("Failed to decode instruction {:#0b}", insn.value),
     }
+}
+
+
+fn insn_to_semantics(insn: &Instruction) -> Semantics {
+    let mut semantics = Semantics::default();
+    semantics.reg_write = match insn.opcode {
+        Opcode::Branch | Opcode::Store => false,
+        _ => true
+    };
+    // TODO
+
+    semantics
 }
 
 

@@ -2,3 +2,6 @@
 name = "riscv-5stage-simulator"
 version = "0.1.0"
 authors = ["Douglas Anderson <Douglas.Anderson-1@colorado.edu>"]
+
+[dependencies]
+regex = "0.2"
