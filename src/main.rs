@@ -1,6 +1,6 @@
 extern crate riscv_5stage_simulator;
 
-use riscv_5stage_simulator::instruction::{Instruction, GUARD_INSTRUCTION};
+use riscv_5stage_simulator::instruction::{Function, Instruction};
 use riscv_5stage_simulator::memory::data::DataMemory;
 use riscv_5stage_simulator::memory::instruction::InstructionMemory;
 use riscv_5stage_simulator::register::RegisterFile;
@@ -62,14 +62,13 @@ fn main() {
     loop {
         let pc = reg.pc.read() as usize;
         let insn = instructions.read(pc);
-
-        if insn == GUARD_INSTRUCTION {
-            println!("Caught guard instruction, exiting...");
+        let parsed_insn = Instruction::new(insn);
+        if parsed_insn.function == Function::Halt {
+            println!("Caught halt instruction, exiting...");
             return;
         }
 
-        let parsed_insn = Instruction::new(insn);
-        println!("{:?}", parsed_insn);
+        println!("{:#0x} - {:?}", pc, parsed_insn);
 
         reg.pc.write((pc as u32) + word);
     }

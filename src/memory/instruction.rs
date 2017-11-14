@@ -1,4 +1,4 @@
-use instruction::GUARD_INSTRUCTION;
+use instruction;
 
 use regex::{Captures, Regex};
 
@@ -50,7 +50,7 @@ impl InstructionMemory {
             }
         }
 
-        mem.push(GUARD_INSTRUCTION);
+        mem.push(instruction::HALT);
 
         InstructionMemory { mem }
     }

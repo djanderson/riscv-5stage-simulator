@@ -2,7 +2,7 @@ pub mod decoder;
 pub mod semantics;
 
 
-pub const GUARD_INSTRUCTION: u32 = 0xffffffff;
+pub const HALT: u32 = 0x3f;  /// Special simulator-only instruction
 pub const OPCODE_MASK: u32 = 0x7f;
 
 
@@ -32,7 +32,7 @@ impl Instruction {
         let opcode = int_to_opcode(value);
         let format = opcode_to_format(opcode);
         let fields = Fields::default();
-        let function = Function::Nop;
+        let function = Function::Addi;
         let semantics = Semantics::default();
         let mut insn = Instruction {
             value,
@@ -66,6 +66,7 @@ fn int_to_opcode(insn: u32) -> Opcode {
         0b01_000_11 => Opcode::Store,
         0b01_100_11 => Opcode::Op,
         0b00_100_11 => Opcode::OpImm,
+        0b01_111_11 => Opcode::Halt,
         _ => panic!("Unknown opcode {:#09b}", opcode),
     }
 }
@@ -82,6 +83,7 @@ fn opcode_to_format(opcode: Opcode) -> Format {
         Opcode::Store => Format::S,
         Opcode::Op => Format::R,
         Opcode::OpImm => Format::I,
+        Opcode::Halt => Format::U,  // Do minimal parsing; Halt has no format
     }
 }
 
@@ -110,6 +112,7 @@ pub enum Opcode {
     Store,
     Op,
     OpImm,
+    Halt,
 }
 
 
@@ -154,7 +157,6 @@ impl Default for AluSrc {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Function {
-    Nop, // No op
     Lui, // Load upper immediate
     AuiPc, // Add upper immediate to PC
     // Jumps
@@ -198,6 +200,7 @@ pub enum Function {
     Sra, // Shift right arithmetic
     Or, // Logical Or
     And, // Logical And
+    Halt, // Halt simulator
 }
 
 

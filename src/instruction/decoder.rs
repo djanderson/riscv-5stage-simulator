@@ -16,6 +16,7 @@ const FUNCT3_SHIFT: u8 = 12;
 const RS1_SHIFT: u8 = 15;
 const RS2_SHIFT: u8 = 20;
 const RD_SHIFT: u8 = 7;
+const BIT30_SHIFT: u8 = 30;
 
 
 pub fn decode(insn: &mut Instruction) {
@@ -34,13 +35,25 @@ pub fn decode(insn: &mut Instruction) {
 
 
 fn insn_to_fn(insn: &Instruction) -> Function {
-    let bit30 = insn.value & BIT30_MASK;
+    // Check opcode-only functions
+    let function = match insn.opcode {
+        Opcode::Lui => Function::Lui,
+        Opcode::AuiPc => Function::AuiPc,
+        Opcode::Jal => Function::Jal,
+        Opcode::Jalr => Function::Jalr,
+        Opcode::Halt => Function::Halt,
+        _ => Function::Addi, // Signal opcode didn't match
+    };
+
+    if function != Function::Addi {
+        return function
+    }
+
+    let bit30 = (insn.value & BIT30_MASK) >> BIT30_SHIFT;
     let funct3 = insn.fields.funct3.unwrap();
+
+    // Check rest of functions
     match (insn.opcode, funct3, bit30) {
-        (Opcode::Lui, ..) => Function::Lui,
-        (Opcode::AuiPc, ..) => Function::AuiPc,
-        (Opcode::Jal, ..) => Function::Jal,
-        (Opcode::Jalr, ..) => Function::Jalr,
         (Opcode::Branch, 0b000, _) => Function::Beq,
         (Opcode::Branch, 0b001, _) => Function::Bne,
         (Opcode::Branch, 0b100, _) => Function::Blt,
@@ -74,7 +87,7 @@ fn insn_to_fn(insn: &Instruction) -> Function {
         (Opcode::Op, 0b101, 0b1) => Function::Sra,
         (Opcode::Op, 0b110, _) => Function::Or,
         (Opcode::Op, 0b111, _) => Function::And,
-        _ => panic!("Failed to decode instruction {:#0b}", insn.value),
+        _ => panic!("Failed to decode instruction {:#0x}", insn.value),
     }
 }
 
