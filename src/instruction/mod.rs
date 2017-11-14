@@ -1,8 +1,11 @@
+use super::alu;
+
 pub mod decoder;
 pub mod semantics;
 
 
-pub const HALT: u32 = 0x3f;  /// Special simulator-only instruction
+pub const HALT: u32 = 0x3f;
+/// Special simulator-only instruction
 pub const OPCODE_MASK: u32 = 0x7f;
 
 
@@ -128,34 +131,6 @@ pub enum Format {
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum AluOp {
-    Add,
-    Sub,
-}
-
-
-impl Default for AluOp {
-    fn default() -> AluOp {
-        AluOp::Add
-    }
-}
-
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum AluSrc {
-    Reg,
-    Imm,
-}
-
-
-impl Default for AluSrc {
-    fn default() -> AluSrc {
-        AluSrc::Reg
-    }
-}
-
-
-#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Function {
     Lui, // Load upper immediate
     AuiPc, // Add upper immediate to PC
@@ -206,10 +181,11 @@ pub enum Function {
 
 #[derive(Debug, Default)]
 pub struct Semantics {
-    pub reg_write: bool,
+    pub branch: bool,
     pub mem_read: bool,
-    pub mem_write: bool,
     pub mem_to_reg: bool,
-    pub alu_src: AluSrc,
-    pub alu_op: AluOp,
+    pub alu_op: alu::AluOp,
+    pub mem_write: bool,
+    pub alu_src: alu::AluSrc,
+    pub reg_write: bool,
 }

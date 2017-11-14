@@ -46,7 +46,7 @@ fn insn_to_fn(insn: &Instruction) -> Function {
     };
 
     if function != Function::Addi {
-        return function
+        return function;
     }
 
     let bit30 = (insn.value & BIT30_MASK) >> BIT30_SHIFT;
@@ -93,12 +93,52 @@ fn insn_to_fn(insn: &Instruction) -> Function {
 
 
 fn insn_to_semantics(insn: &Instruction) -> Semantics {
+    use alu::AluOp::*;
+
     let mut semantics = Semantics::default();
+
+    semantics.branch = insn.opcode == Opcode::Branch;
+    semantics.mem_read = insn.opcode == Opcode::Load;
+    semantics.mem_to_reg = insn.opcode == Opcode::Load;
+    semantics.alu_op = match (insn.opcode, insn.function) {
+        (Opcode::Load, _) => Add,
+        (Opcode::Store, _) => Add,
+        (Opcode::Branch, Function::Beq) => BranchOnEqual,
+        (Opcode::Branch, Function::Bne) => BranchOnNotEqual,
+        (Opcode::Branch, Function::Blt) => BranchOnLessThan,
+        (Opcode::Branch, Function::Bltu) => BranchOnLessThanUnsigned,
+        (Opcode::Branch, Function::Bge) => BranchOnGreaterOrEqual,
+        (Opcode::Branch, Function::Bgeu) => BranchOnGreaterOrEqualUnsigned,
+        (Opcode::OpImm, Function::Addi) => Add,
+        (Opcode::OpImm, Function::Slti) => SetOnLessThan,
+        (Opcode::OpImm, Function::Sltiu) => SetOnLessThanUnsigned,
+        (Opcode::OpImm, Function::Xori) => Xor,
+        (Opcode::OpImm, Function::Ori) => Or,
+        (Opcode::OpImm, Function::Andi) => And,
+        (Opcode::OpImm, Function::Slli) => ShiftLeft,
+        (Opcode::OpImm, Function::Srli) => ShiftRightLogical,
+        (Opcode::OpImm, Function::Srai) => ShiftRightArithmetic,
+        (Opcode::Op, Function::Add) => Add,
+        (Opcode::Op, Function::Sub) => Sub,
+        (Opcode::Op, Function::Slt) => SetOnLessThan,
+        (Opcode::Op, Function::Sltu) => SetOnLessThanUnsigned,
+        (Opcode::Op, Function::Xor) => Xor,
+        (Opcode::Op, Function::Or) => Or,
+        (Opcode::Op, Function::And) => And,
+        (Opcode::Op, Function::Sll) => ShiftLeft,
+        (Opcode::Op, Function::Srl) => ShiftRightLogical,
+        (Opcode::Op, Function::Sra) => ShiftRightArithmetic,
+        _ => panic!("Semanics for {:?} not implemented", insn.function),
+    };
+    semantics.mem_write = insn.opcode == Opcode::Store;
+    semantics.alu_src = match insn.opcode {
+        Opcode::Branch | Opcode::Store | Opcode::Op => alu::AluSrc::Reg,
+        _ => alu::AluSrc::Imm,
+    };
     semantics.reg_write = match insn.opcode {
         Opcode::Branch | Opcode::Store => false,
-        _ => true
+        _ => true,
     };
-    // TODO
 
     semantics
 }
