@@ -99,7 +99,6 @@ pub struct Fields {
     pub funct3: Option<u32>,
     pub funct7: Option<u32>,
     pub imm: Option<u32>,
-    pub shamt: Option<u32>,
     pub opcode: Option<u32>,
 }
 
@@ -188,4 +187,5 @@ pub struct Semantics {
     pub mem_write: bool,
     pub alu_src: alu::AluSrc,
     pub reg_write: bool,
+    pub mem_size: usize,
 }

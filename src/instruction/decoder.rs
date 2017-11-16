@@ -97,12 +97,17 @@ fn insn_to_semantics(insn: &Instruction) -> Semantics {
 
     let mut semantics = Semantics::default();
 
-    semantics.branch = insn.opcode == Opcode::Branch;
+    semantics.branch = match insn.opcode {
+        Opcode::Branch | Opcode::Jal | Opcode::Jalr => true,
+        _ => false,
+    };
     semantics.mem_read = insn.opcode == Opcode::Load;
     semantics.mem_to_reg = insn.opcode == Opcode::Load;
     semantics.alu_op = match (insn.opcode, insn.function) {
         (Opcode::Load, _) => Add,
         (Opcode::Store, _) => Add,
+        (Opcode::Jal, _) => BranchOnEqual,
+        (Opcode::Jalr, _) => Add,
         (Opcode::Branch, Function::Beq) => BranchOnEqual,
         (Opcode::Branch, Function::Bne) => BranchOnNotEqual,
         (Opcode::Branch, Function::Blt) => BranchOnLessThan,
@@ -128,16 +133,23 @@ fn insn_to_semantics(insn: &Instruction) -> Semantics {
         (Opcode::Op, Function::Sll) => ShiftLeft,
         (Opcode::Op, Function::Srl) => ShiftRightLogical,
         (Opcode::Op, Function::Sra) => ShiftRightArithmetic,
+        (Opcode::Halt, _) | (Opcode::Lui, _) => Add,
         _ => panic!("Semanics for {:?} not implemented", insn.function),
     };
     semantics.mem_write = insn.opcode == Opcode::Store;
     semantics.alu_src = match insn.opcode {
-        Opcode::Branch | Opcode::Store | Opcode::Op => alu::AluSrc::Reg,
+        Opcode::Branch | Opcode::Op | Opcode::Jal => alu::AluSrc::Reg,
         _ => alu::AluSrc::Imm,
     };
     semantics.reg_write = match insn.opcode {
         Opcode::Branch | Opcode::Store => false,
         _ => true,
+    };
+    semantics.mem_size = match insn.function {
+        Function::Lb | Function::Lbu | Function::Sb => 1,
+        Function::Lh | Function::Lhu | Function::Sh => 2,
+        Function::Lw | Function::Sw => 4,
+        _ => 0,
     };
 
     semantics
@@ -151,6 +163,7 @@ fn parse_type_r(insn: u32) -> Fields {
     fields.rs1 = Some((insn & RS1_MASK) >> RS1_SHIFT);
     fields.rs2 = Some((insn & RS2_MASK) >> RS2_SHIFT);
     fields.rd = Some((insn & RD_MASK) >> RD_SHIFT);
+    // TODO: fields.opcode
 
     fields
 }
@@ -163,11 +176,12 @@ fn parse_type_i(insn: u32) -> Fields {
     fields.rd = Some((insn & RD_MASK) >> RD_SHIFT);
     if fields.funct3 == Some(0x1) || fields.funct3 == Some(0x5) {
         // Shift: insn[24:20] -> shamt
-        fields.shamt = Some((insn & RS2_MASK) >> RS2_SHIFT);
+        fields.imm = Some((insn & RS2_MASK) >> RS2_SHIFT);
     } else {
         // Arithmetic or logical: insn[31:20] -> imm[11:0]
         fields.imm = Some((insn & 0xfff00000) >> 20);
     }
+    // TODO: fields.opcode
 
     fields
 }
@@ -183,6 +197,7 @@ fn parse_type_s(insn: u32) -> Fields {
     // insn[11:7] -> imm[4:0]
     let imm_low = (insn & 0xF80) >> 7;
     fields.imm = Some(imm_high | imm_low);
+    // TODO: fields.opcode
 
     fields
 }
@@ -202,6 +217,7 @@ fn parse_type_b(insn: u32) -> Fields {
     // insn[11:8] -> imm[4:1]
     let imm_low = (insn & 0xf00) >> 7;
     fields.imm = Some(imm_bit_12 | imm_bit_11 | imm_high | imm_low);
+    // TODO: fields.opcode
 
     fields
 }
@@ -212,6 +228,7 @@ fn parse_type_u(insn: u32) -> Fields {
     fields.rd = Some((insn & RD_MASK) >> RD_SHIFT);
     // insn[31:12] -> imm[31:12]
     fields.imm = Some(insn & 0xfffff000);
+    // TODO: fields.opcode
 
     fields
 }
@@ -229,6 +246,7 @@ fn parse_type_j(insn: u32) -> Fields {
     // isns[19:12] -> imm[19:12]
     let imm_high = insn & 0xff000;
     fields.imm = Some(imm_bit_20 | imm_high | imm_bit_11 | imm_low);
+    // TODO: fields.opcode
 
     fields
 }
@@ -284,7 +302,7 @@ mod tests {
         assert_eq!(fields.funct3.unwrap(), 0x1);
         assert_eq!(fields.rd.unwrap(), 0x05);
         assert_eq!(fields.rs1.unwrap(), 0x06);
-        assert_eq!(fields.shamt.unwrap(), 3);
+        assert_eq!(fields.imm.unwrap(), 3);
     }
 
     #[test]

@@ -59,7 +59,7 @@ impl InstructionMemory {
         let word_addr = addr >> 2;
 
         if word_addr >= self.mem.len() {
-            panic!("Address 0x{:0x} out of range", word_addr);
+            panic!("Address 0x{:0x} out of range", addr);
         }
 
         self.mem[word_addr]
