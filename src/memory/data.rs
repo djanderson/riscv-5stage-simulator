@@ -1,15 +1,23 @@
+//! A read-write data memory.
+
+
+/// A read-write data memory.
 pub struct DataMemory {
     mem: Box<[u32]>
 }
 
 
 impl DataMemory {
+    /// Constructs a new `DataMemory`.
+    ///
+    /// Allocates `nwords` * 32 bits of memory.
     pub fn new(nwords: usize) -> DataMemory {
         DataMemory {
             mem: vec![0u32; nwords].into_boxed_slice()
         }
     }
 
+    /// Reads `size` (1, 2, or 4) bytes from memory.
     pub fn read(&self, addr: usize, size: usize) -> u32 {
         // Split byte address into word address and byte offset
         let word_addr = addr >> 2;
@@ -34,6 +42,7 @@ impl DataMemory {
         };
     }
 
+    /// Writes the lower `size` (1, 2, or 4) bytes of `data` to memory.
     pub fn write(&mut self, addr: usize, size: usize, data: u32) {
         // Split byte address into word address and byte offset
         let word_addr = addr >> 2;
