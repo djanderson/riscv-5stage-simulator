@@ -2,9 +2,9 @@
 
 
 use consts::WORD_SIZE;
-use memory::instruction::InstructionMemory;
 use instruction::{Function, Opcode};
 use memory::data::DataMemory;
+use memory::instruction::InstructionMemory;
 use register::RegisterFile;
 use stages;
 
