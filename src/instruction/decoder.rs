@@ -1,25 +1,9 @@
 //! Decodes RISC-V 32I instructions.
 
 
-use super::*;
-
-
-// Masks to isolate specific parts of the instruction using logical AND (&)
-pub const FUNCT7_MASK: u32 = 0xfe000000;
-pub const FUNCT3_MASK: u32 = 0x7000;
-pub const RS1_MASK: u32 = 0xf8000;
-pub const RS2_MASK: u32 = 0x1f00000;
-pub const RD_MASK: u32 = 0xf80;
-pub const OPCODE_MASK: u32 = 0x7f;
-pub const BIT30_MASK: u32 = 0x40000000;
-
-// Indices of instruction parts for shifting
-const FUNCT7_SHIFT: u8 = 25;
-const FUNCT3_SHIFT: u8 = 12;
-const RS1_SHIFT: u8 = 15;
-const RS2_SHIFT: u8 = 20;
-const RD_SHIFT: u8 = 7;
-const BIT30_SHIFT: u8 = 30;
+use ::alu::AluSrc;
+use ::consts::*;
+use ::instruction::{Instruction, Fields, Format, Opcode, Function, Semantics};
 
 
 /// Decodes RISC-V 32I instructions.
@@ -144,8 +128,8 @@ fn insn_to_semantics(insn: &Instruction) -> Semantics {
     };
     semantics.mem_write = insn.opcode == Opcode::Store;
     semantics.alu_src = match insn.opcode {
-        Opcode::Branch | Opcode::Op | Opcode::Jal => alu::AluSrc::Reg,
-        _ => alu::AluSrc::Imm,
+        Opcode::Branch | Opcode::Op | Opcode::Jal => AluSrc::Reg,
+        _ => AluSrc::Imm,
     };
     semantics.reg_write = match insn.opcode {
         Opcode::Branch | Opcode::Store => false,

@@ -1,13 +1,10 @@
 //! Instruction decode stage.
 
 
-use super::alu;
+use ::alu::{AluOp, AluSrc};
+use ::consts;
 
 pub mod decoder;
-
-
-/// Special simulator-only instruction signaling to halt simulator.
-pub const HALT: u32 = 0x3f;
 
 
 /// A single machine instruction.
@@ -63,7 +60,7 @@ impl Instruction {
 /// Extracts the opcode from a raw instruction integer.
 // TODO: pull commented out tests from parser.rs for this fn
 fn int_to_opcode(insn: u32) -> Opcode {
-    let opcode = insn & decoder::OPCODE_MASK;
+    let opcode = insn & consts::OPCODE_MASK;
     match opcode {
         0b01_101_11 => Opcode::Lui,
         0b00_101_11 => Opcode::AuiPc,
@@ -232,9 +229,9 @@ pub struct Semantics {
     pub branch: bool,
     pub mem_read: bool,
     pub mem_to_reg: bool,
-    pub alu_op: alu::AluOp,
+    pub alu_op: AluOp,
     pub mem_write: bool,
-    pub alu_src: alu::AluSrc,
+    pub alu_src: AluSrc,
     pub reg_write: bool,
     pub mem_size: usize,
 }

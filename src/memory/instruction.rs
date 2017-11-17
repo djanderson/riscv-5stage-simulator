@@ -3,7 +3,7 @@
 //! Provides a loader for disassembler output.
 
 
-use instruction;
+use ::consts::HALT;
 
 use regex::{Captures, Regex};
 
@@ -74,7 +74,7 @@ impl DisassemblyInstructionMemory {
             }
         }
 
-        mem.push(instruction::HALT);
+        mem.push(HALT);
 
         DisassemblyInstructionMemory { mem }
     }
