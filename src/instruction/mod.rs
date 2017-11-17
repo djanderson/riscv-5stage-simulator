@@ -1,36 +1,39 @@
+//! Instruction decode stage.
+
+
 use super::alu;
 
 pub mod decoder;
-pub mod semantics;
 
 
+/// Special simulator-only instruction signaling to halt simulator.
 pub const HALT: u32 = 0x3f;
-/// Special simulator-only instruction
-pub const OPCODE_MASK: u32 = 0x7f;
 
 
+/// A single machine instruction.
 #[derive(Debug)]
 pub struct Instruction {
     value: u32,
 
-    /// The category of the instruction, e.g., Load, Branch, Op
+    /// Category of the instruction, e.g., load, branch, or op
     pub opcode: Opcode,
 
-    /// The format associated with the opcode, e.g., R-type, I-type
+    /// Format associated with the opcode, e.g., R-type or I-type
     pub format: Format,
 
     /// Struct for accessing the subfields' bits
     pub fields: Fields,
 
-    /// The specific instruction's function, e.g., Jal, Xor, Sra
+    /// Instruction's mnemonic, e.g., JAL, XOR, or SRA
     pub function: Function,
 
-    /// Tells the rest of the processor what the instruction actually _does_
+    /// Control unit semantics (dictates control lines to be {de}asserted)
     pub semantics: Semantics,
 }
 
 
 impl Instruction {
+    /// Constructs a new `Instruction`.
     pub fn new(value: u32) -> Instruction {
         let opcode = int_to_opcode(value);
         let format = opcode_to_format(opcode);
@@ -50,15 +53,17 @@ impl Instruction {
         insn
     }
 
+    /// Returns the original instruction integer.
     pub fn as_u32(&self) -> u32 {
         self.value
     }
 }
 
 
+/// Extracts the opcode from a raw instruction integer.
 // TODO: pull commented out tests from parser.rs for this fn
 fn int_to_opcode(insn: u32) -> Opcode {
-    let opcode = insn & OPCODE_MASK;
+    let opcode = insn & decoder::OPCODE_MASK;
     match opcode {
         0b01_101_11 => Opcode::Lui,
         0b00_101_11 => Opcode::AuiPc,
@@ -75,6 +80,7 @@ fn int_to_opcode(insn: u32) -> Opcode {
 }
 
 
+/// Maps an opcode to its instruction format.
 fn opcode_to_format(opcode: Opcode) -> Format {
     match opcode {
         Opcode::Lui => Format::U,
@@ -91,6 +97,7 @@ fn opcode_to_format(opcode: Opcode) -> Format {
 }
 
 
+/// RISC-V 32I fields (shamt -> imm).
 #[derive(Debug, Default, PartialEq)]
 pub struct Fields {
     pub rs1: Option<u32>,
@@ -103,6 +110,7 @@ pub struct Fields {
 }
 
 
+/// RISC-V 32I opcodes.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Opcode {
     Lui,
@@ -118,6 +126,7 @@ pub enum Opcode {
 }
 
 
+/// RISC-V 32I instruction formats.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Format {
     R,
@@ -129,55 +138,95 @@ pub enum Format {
 }
 
 
+/// RISC-V 32I mnemonics.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Function {
-    Lui, // Load upper immediate
-    AuiPc, // Add upper immediate to PC
+    /// Load upper immediate
+    Lui,
+    /// Add upper immediate to PC
+    AuiPc,
     // Jumps
-    Jal, // Jump and link
-    Jalr, // Jump and link register
+    /// Jump and link
+    Jal,
+    /// Jump and link register
+    Jalr,
     // Branches
-    Beq, // Branch if equal
-    Bne, // Branch if not equal
-    Blt, // Branch if less than
-    Bge, // Branch if greater or equal
-    Bltu, // Branch if less than (unsigned)
-    Bgeu, // Branch if greater or equal (unsigned)
+    /// Branch if equal
+    Beq,
+    /// Branch if not equal
+    Bne,
+    /// Branch if less than
+    Blt,
+    /// Branch if greater or equal
+    Bge,
+    /// Branch if less than (unsigned)
+    Bltu,
+    /// Branch if greater or equal (unsigned)
+    Bgeu,
     // Loads
-    Lb, // Load byte
-    Lh, // Load halfword
-    Lw, // Load word
-    Lbu, // Load byte (unsigned)
-    Lhu, // Load halfword (unsigned)
+    /// Load byte
+    Lb,
+    /// Load halfword
+    Lh,
+    /// Load word
+    Lw,
+    /// Load byte (unsigned)
+    Lbu,
+    /// Load halfword (unsigned)
+    Lhu,
     // Stores
-    Sb, // Store byte
-    Sh, // Store halfword
-    Sw, // Store word
+    /// Store byte
+    Sb,
+    /// Store halfword
+    Sh,
+    /// Store word
+    Sw,
     // Operations on immediates
-    Addi, // Add immediate
-    Slti, // Set less than immediate
-    Sltiu, // Set less than immediate (unsigned)
-    Xori, // Exclusive or immediate
-    Ori, // Logical Or immediate
-    Andi, // Logical And immediate
-    Slli, // Shift left logical immediate
-    Srli, // Shift right logical immediate
-    Srai, // Shift right arithmetic immediate
+    /// Add immediate
+    Addi,
+    /// Set less than immediate
+    Slti,
+    /// Set less than immediate (unsigned)
+    Sltiu,
+    /// Exclusive or immediate
+    Xori,
+    /// Logical Or immediate
+    Ori,
+    /// Logical And immediate
+    Andi,
+    /// Shift left logical immediate
+    Slli,
+    /// Shift right logical immediate
+    Srli,
+    /// Shift right arithmetic immediate
+    Srai,
     // Operations on registers
-    Add, // Add
-    Sub, // Subtract
-    Sll, // Shift left logical
-    Slt, // Set less than
-    Sltu, // Set less than unsigned
-    Xor, // Exclusive or
-    Srl, // Shift right logical
-    Sra, // Shift right arithmetic
-    Or, // Logical Or
-    And, // Logical And
-    Halt, // Halt simulator
+    /// Add
+    Add,
+    /// Subtract
+    Sub,
+    /// Shift left logical
+    Sll,
+    /// Set less than
+    Slt,
+    /// Set less than unsigned
+    Sltu,
+    /// Exclusive or
+    Xor,
+    /// Shift right logical
+    Srl,
+    /// Shift right arithmetic
+    Sra,
+    /// Logical Or
+    Or,
+    /// Logical And
+    And,
+    /// Halt simulator
+    Halt,
 }
 
 
+/// Control unit semantics
 #[derive(Debug, Default)]
 pub struct Semantics {
     pub branch: bool,

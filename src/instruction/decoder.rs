@@ -5,13 +5,13 @@ use super::*;
 
 
 // Masks to isolate specific parts of the instruction using logical AND (&)
-const FUNCT7_MASK: u32 = 0xfe000000;
-const FUNCT3_MASK: u32 = 0x7000;
-const RS1_MASK: u32 = 0xf8000;
-const RS2_MASK: u32 = 0x1f00000;
-const RD_MASK: u32 = 0xf80;
-const OPCODE_MASK: u32 = 0x7f;
-const BIT30_MASK: u32 = 0x40000000;
+pub const FUNCT7_MASK: u32 = 0xfe000000;
+pub const FUNCT3_MASK: u32 = 0x7000;
+pub const RS1_MASK: u32 = 0xf8000;
+pub const RS2_MASK: u32 = 0x1f00000;
+pub const RD_MASK: u32 = 0xf80;
+pub const OPCODE_MASK: u32 = 0x7f;
+pub const BIT30_MASK: u32 = 0x40000000;
 
 // Indices of instruction parts for shifting
 const FUNCT7_SHIFT: u8 = 25;
@@ -37,7 +37,7 @@ pub fn decode(insn: &mut Instruction) {
 }
 
 
-/// Determines an instruction's mnemonic, e.g., ADD or BNE.
+/// Determines an instruction's mnemonic, e.g., JAL, XOR, or SRA
 fn insn_to_fn(insn: &Instruction) -> Function {
     // Check opcode-only functions
     let function = match insn.opcode {
