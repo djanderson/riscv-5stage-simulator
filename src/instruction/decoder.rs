@@ -1,3 +1,6 @@
+//! Decodes RISC-V 32I instructions.
+
+
 use super::*;
 
 
@@ -19,6 +22,7 @@ const RD_SHIFT: u8 = 7;
 const BIT30_SHIFT: u8 = 30;
 
 
+/// Decodes RISC-V 32I instructions.
 pub fn decode(insn: &mut Instruction) {
     insn.fields = match insn.format {
         Format::R => parse_type_r(insn.value),
@@ -28,12 +32,12 @@ pub fn decode(insn: &mut Instruction) {
         Format::U => parse_type_u(insn.value),
         Format::J => parse_type_j(insn.value),
     };
-
     insn.function = insn_to_fn(insn);
     insn.semantics = insn_to_semantics(insn);
 }
 
 
+/// Determines an instruction's mnemonic, e.g., ADD or BNE.
 fn insn_to_fn(insn: &Instruction) -> Function {
     // Check opcode-only functions
     let function = match insn.opcode {
@@ -92,6 +96,7 @@ fn insn_to_fn(insn: &Instruction) -> Function {
 }
 
 
+/// Sets an instruction's control unit semantics.
 fn insn_to_semantics(insn: &Instruction) -> Semantics {
     use alu::AluOp::*;
 
@@ -134,7 +139,7 @@ fn insn_to_semantics(insn: &Instruction) -> Semantics {
         (Opcode::Op, Function::Srl) => ShiftRightLogical,
         (Opcode::Op, Function::Sra) => ShiftRightArithmetic,
         (Opcode::Halt, _) | (Opcode::Lui, _) => Add,
-        _ => panic!("Semanics for {:?} not implemented", insn.function),
+        _ => panic!("ALU semanics for {:?} not implemented", insn.function),
     };
     semantics.mem_write = insn.opcode == Opcode::Store;
     semantics.alu_src = match insn.opcode {
@@ -156,21 +161,24 @@ fn insn_to_semantics(insn: &Instruction) -> Semantics {
 }
 
 
+/// Parses fields of R-type format instructions.
 fn parse_type_r(insn: u32) -> Fields {
     let mut fields = Fields::default();
+    fields.opcode = Some((insn & OPCODE_MASK));
     fields.funct3 = Some((insn & FUNCT3_MASK) >> FUNCT3_SHIFT);
     fields.funct7 = Some((insn & FUNCT7_MASK) >> FUNCT7_SHIFT);
     fields.rs1 = Some((insn & RS1_MASK) >> RS1_SHIFT);
     fields.rs2 = Some((insn & RS2_MASK) >> RS2_SHIFT);
     fields.rd = Some((insn & RD_MASK) >> RD_SHIFT);
-    // TODO: fields.opcode
 
     fields
 }
 
 
+/// Parses fields of I-type format instructions.
 fn parse_type_i(insn: u32) -> Fields {
     let mut fields = Fields::default();
+    fields.opcode = Some((insn & OPCODE_MASK));
     fields.funct3 = Some((insn & FUNCT3_MASK) >> FUNCT3_SHIFT);
     fields.rs1 = Some((insn & RS1_MASK) >> RS1_SHIFT);
     fields.rd = Some((insn & RD_MASK) >> RD_SHIFT);
@@ -181,14 +189,15 @@ fn parse_type_i(insn: u32) -> Fields {
         // Arithmetic or logical: insn[31:20] -> imm[11:0]
         fields.imm = Some((insn & 0xfff00000) >> 20);
     }
-    // TODO: fields.opcode
 
     fields
 }
 
 
+/// Parses fields of S-type format instructions.
 fn parse_type_s(insn: u32) -> Fields {
     let mut fields = Fields::default();
+    fields.opcode = Some((insn & OPCODE_MASK));
     fields.funct3 = Some((insn & FUNCT3_MASK) >> FUNCT3_SHIFT);
     fields.rs1 = Some((insn & RS1_MASK) >> RS1_SHIFT);
     fields.rs2 = Some((insn & RS2_MASK) >> RS2_SHIFT);
@@ -197,14 +206,15 @@ fn parse_type_s(insn: u32) -> Fields {
     // insn[11:7] -> imm[4:0]
     let imm_low = (insn & 0xF80) >> 7;
     fields.imm = Some(imm_high | imm_low);
-    // TODO: fields.opcode
 
     fields
 }
 
 
+/// Parses fields of B-type format instructions.
 fn parse_type_b(insn: u32) -> Fields {
     let mut fields = Fields::default();
+    fields.opcode = Some((insn & OPCODE_MASK));
     fields.funct3 = Some((insn & FUNCT3_MASK) >> FUNCT3_SHIFT);
     fields.rs1 = Some((insn & RS1_MASK) >> RS1_SHIFT);
     fields.rs2 = Some((insn & RS2_MASK) >> RS2_SHIFT);
@@ -217,25 +227,27 @@ fn parse_type_b(insn: u32) -> Fields {
     // insn[11:8] -> imm[4:1]
     let imm_low = (insn & 0xf00) >> 7;
     fields.imm = Some(imm_bit_12 | imm_bit_11 | imm_high | imm_low);
-    // TODO: fields.opcode
 
     fields
 }
 
 
+/// Parses fields of U-type format instructions.
 fn parse_type_u(insn: u32) -> Fields {
     let mut fields = Fields::default();
+    fields.opcode = Some((insn & OPCODE_MASK));
     fields.rd = Some((insn & RD_MASK) >> RD_SHIFT);
     // insn[31:12] -> imm[31:12]
     fields.imm = Some(insn & 0xfffff000);
-    // TODO: fields.opcode
 
     fields
 }
 
 
+/// Parses fields of J-type format instructions.
 fn parse_type_j(insn: u32) -> Fields {
     let mut fields = Fields::default();
+    fields.opcode = Some((insn & OPCODE_MASK));
     fields.rd = Some((insn & RD_MASK) >> RD_SHIFT);
     // insn[31] -> imm[20]
     let imm_bit_20 = (insn & 0x80000000) >> 11;
@@ -246,7 +258,6 @@ fn parse_type_j(insn: u32) -> Fields {
     // isns[19:12] -> imm[19:12]
     let imm_high = insn & 0xff000;
     fields.imm = Some(imm_bit_20 | imm_high | imm_bit_11 | imm_low);
-    // TODO: fields.opcode
 
     fields
 }
