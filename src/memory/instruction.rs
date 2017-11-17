@@ -29,14 +29,20 @@ const RE: &str = r"(?x)
 ";
 
 
-/// A read-only instruction memory.
-pub struct InstructionMemory {
+/// A read-only instruction memory trait.
+pub trait InstructionMemory {
+    fn read(&self, addr: usize) -> u32;
+}
+
+
+/// Instruction memory that populates memory from disassembler output.
+pub struct DisassemblyInstructionMemory {
     pub mem: Vec<u32>,
 }
 
 
-impl InstructionMemory {
-    /// Constructs a new `InstructionMemory`.
+impl DisassemblyInstructionMemory {
+    /// Constructs a new `DisassemblyInstructionMemory`.
     ///
     /// `disassembly` must be an open text file containing lines of the form:
     ///
@@ -47,7 +53,7 @@ impl InstructionMemory {
     /// The first such matching line must have address 0.
     /// Non-matching lines are ignored.
     ///
-    pub fn new(disassembly: &File) -> InstructionMemory {
+    pub fn new(disassembly: &File) -> DisassemblyInstructionMemory {
         let file = BufReader::new(disassembly);
         let mut mem = Vec::new();
         let regex = Regex::new(RE).unwrap();
@@ -70,14 +76,17 @@ impl InstructionMemory {
 
         mem.push(instruction::HALT);
 
-        InstructionMemory { mem }
+        DisassemblyInstructionMemory { mem }
     }
+}
 
+
+impl InstructionMemory for DisassemblyInstructionMemory {
     /// Reads an instruction from `InstructionMemory`.
     ///
     /// The requested address is right-shifted by 2 to ensure word alignment.
     ///
-    pub fn read(&self, addr: usize) -> u32 {
+    fn read(&self, addr: usize) -> u32 {
         let word_addr = addr >> 2;
 
         if word_addr >= self.mem.len() {

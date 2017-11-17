@@ -3,7 +3,7 @@
 
 /// A read-write data memory.
 pub struct DataMemory {
-    mem: Box<[u32]>
+    mem: Box<[u32]>,
 }
 
 
@@ -12,9 +12,7 @@ impl DataMemory {
     ///
     /// Allocates `nwords` * 32 bits of memory.
     pub fn new(nwords: usize) -> DataMemory {
-        DataMemory {
-            mem: vec![0u32; nwords].into_boxed_slice()
-        }
+        DataMemory { mem: vec![0u32; nwords].into_boxed_slice() }
     }
 
     /// Reads `size` (1, 2, or 4) bytes from memory.
@@ -38,7 +36,7 @@ impl DataMemory {
             1 => word & 0xFF,   // isolate least significant byte
             2 => word & 0xFFFF, // isolate least significant halfword
             4 => word,
-            _ => panic!("Can only read 1, 2, or 4 bytes at a time")
+            _ => panic!("Can only read 1, 2, or 4 bytes at a time"),
         };
     }
 
@@ -62,7 +60,7 @@ impl DataMemory {
             1 => 0xFF,
             2 => 0xFFFF,
             4 => 0xFFFFFFFF,
-            _ => panic!("Can only write 1, 2, or 4 bytes at a time")
+            _ => panic!("Can only write 1, 2, or 4 bytes at a time"),
         };
         let mask = mask << byte_offset_in_bits;
         let masked_current_word = current_word & !mask;

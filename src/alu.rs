@@ -1,7 +1,7 @@
 //! Arithmetic logic unit.
 
 
-use ::instruction::Instruction;
+use instruction::Instruction;
 
 
 /// Perform one ALU operation.

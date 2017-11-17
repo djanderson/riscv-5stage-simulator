@@ -138,7 +138,8 @@ fn insn_to_semantics(insn: &Instruction) -> Semantics {
         (Opcode::Op, Function::Sll) => ShiftLeft,
         (Opcode::Op, Function::Srl) => ShiftRightLogical,
         (Opcode::Op, Function::Sra) => ShiftRightArithmetic,
-        (Opcode::Halt, _) | (Opcode::Lui, _) => Add,
+        (Opcode::Halt, _) |
+        (Opcode::Lui, _) => Add,
         _ => panic!("ALU semanics for {:?} not implemented", insn.function),
     };
     semantics.mem_write = insn.opcode == Opcode::Store;
