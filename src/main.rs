@@ -1,6 +1,6 @@
 extern crate riscv_5stage_simulator;
 
-use riscv_5stage_simulator::alu::{AluOp, AluSrc};
+use riscv_5stage_simulator::alu::{alu, AluSrc};
 use riscv_5stage_simulator::instruction::{Function, Instruction, Opcode};
 use riscv_5stage_simulator::memory::data::DataMemory;
 use riscv_5stage_simulator::memory::instruction::InstructionMemory;
@@ -54,34 +54,6 @@ fn imm_gen(insn: &Instruction) -> Option<u32> {
 }
 
 
-fn alu(insn: &Instruction, src1: i32, src2: i32) -> i32 {
-    use AluOp::*;
-
-    let value = match insn.semantics.alu_op {
-        Add => src1 + src2,
-        Sub => src1 - src2, // TODO: verify
-        And => src1 & src2,
-        Or => src1 | src2,
-        Xor => src1 ^ src2,
-        BranchOnEqual => !(src1 == src2) as i32,
-        BranchOnNotEqual => !(src1 != src2) as i32,
-        BranchOnLessThan => !(src1 < src2) as i32,
-        BranchOnLessThanUnsigned => !((src1 as u32) < (src2 as u32)) as i32,
-        BranchOnGreaterOrEqual => !(src1 >= src2) as i32,
-        BranchOnGreaterOrEqualUnsigned => {
-            !((src1 as u32) >= (src2 as u32)) as i32
-        }
-        ShiftLeft => src1 << src2,
-        ShiftRightLogical => ((src1 as u32) >> src2) as i32,
-        ShiftRightArithmetic => src1 >> src2, // FIXME
-        SetOnLessThan => (src1 < src2) as i32,
-        SetOnLessThanUnsigned => ((src1 as u32) < (src2 as u32)) as i32,
-    };
-
-    value
-}
-
-
 fn main() {
     let args: Vec<String> = env::args().collect();
     let program_name = &args[0];
@@ -91,7 +63,6 @@ fn main() {
     if let Some(filename) = args.get(1) {
         let f = File::open(filename).expect("error opening file");
         instructions = InstructionMemory::new(&f);
-        println!("Successfully opened {}.", filename);
     } else {
         println!("Usage: {} <filename>", program_name);
         std::process::exit(1);
@@ -117,12 +88,12 @@ fn main() {
 
         // EX: Execute operation or calculate address
         insn.fields.imm = imm_gen(&insn);
-        let src1 = rs1;
+        let src1 = rs1 as i32;
         let src2 = match insn.semantics.alu_src {
             AluSrc::Reg => rs2,
             AluSrc::Imm => insn.fields.imm.unwrap(),
-        };
-        let alu_result = alu(&insn, src1 as i32, src2 as i32);
+        } as i32;
+        let alu_result = alu(&insn, src1, src2);
 
         // MEM: Access memory operand
         let mut mem_result: u32 = 0;
