@@ -2,6 +2,7 @@
 //!
 //! Provides a loader for disassembler output.
 
+
 use instruction;
 
 use regex::{Captures, Regex};
