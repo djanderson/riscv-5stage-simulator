@@ -33,8 +33,8 @@ impl DataMemory {
         let word = self.mem[word_addr] >> byte_offset_in_bits;
 
         return match size {
-            1 => word & 0xFF,   // isolate least significant byte
-            2 => word & 0xFFFF, // isolate least significant halfword
+            1 => word & 0xff,   // isolate least significant byte
+            2 => word & 0xffff, // isolate least significant halfword
             4 => word,
             _ => panic!("Can only read 1, 2, or 4 bytes at a time"),
         };
@@ -57,9 +57,9 @@ impl DataMemory {
 
         let current_word = self.mem[word_addr];
         let mask = match size {
-            1 => 0xFF,
-            2 => 0xFFFF,
-            4 => 0xFFFFFFFF,
+            1 => 0xff,
+            2 => 0xffff,
+            4 => 0xffffffff,
             _ => panic!("Can only write 1, 2, or 4 bytes at a time"),
         };
         let mask = mask << byte_offset_in_bits;
@@ -88,10 +88,10 @@ mod tests {
         let mut size = 1;
 
         assert_eq!(mem.read(addr, size), 0);
-        mem.write(addr, size, 0xFF);
+        mem.write(addr, size, 0xff);
         addr = 0x0;
         size = 4;
-        assert_eq!(mem.read(addr, size), 0xFF);
+        assert_eq!(mem.read(addr, size), 0xff);
     }
 
     #[test]
@@ -101,10 +101,10 @@ mod tests {
         let mut size = 1;
 
         assert_eq!(mem.read(addr, size), 0);
-        mem.write(addr, size, 0xFF);
+        mem.write(addr, size, 0xff);
         addr = 0x0;
         size = 4;
-        assert_eq!(mem.read(addr, size), 0xFF00);
+        assert_eq!(mem.read(addr, size), 0xff00);
     }
 
     #[test]
@@ -114,10 +114,10 @@ mod tests {
         let mut size = 1;
 
         assert_eq!(mem.read(addr, size), 0);
-        mem.write(addr, size, 0xFF);
+        mem.write(addr, size, 0xff);
         addr = 0x0;
         size = 4;
-        assert_eq!(mem.read(addr, size), 0xFF0000);
+        assert_eq!(mem.read(addr, size), 0xff0000);
     }
 
     #[test]
@@ -127,10 +127,10 @@ mod tests {
         let mut size = 1;
 
         assert_eq!(mem.read(addr, size), 0);
-        mem.write(addr, size, 0xFF);
+        mem.write(addr, size, 0xff);
         addr = 0x0;
         size = 4;
-        assert_eq!(mem.read(addr, size), 0xFF000000);
+        assert_eq!(mem.read(addr, size), 0xff000000);
     }
 
     #[test]
@@ -140,8 +140,8 @@ mod tests {
         let size = 2;
 
         assert_eq!(mem.read(addr, size), 0);
-        mem.write(addr, size, 0xF0F0);
-        assert_eq!(mem.read(addr, size), 0xF0F0);
+        mem.write(addr, size, 0xf0f0);
+        assert_eq!(mem.read(addr, size), 0xf0f0);
     }
 
     #[test]
@@ -151,8 +151,8 @@ mod tests {
         let size = 2;
 
         assert_eq!(mem.read(addr, size), 0);
-        mem.write(addr, size, 0xF0F0);
-        assert_eq!(mem.read(addr, size), 0xF0F0);
+        mem.write(addr, size, 0xf0f0);
+        assert_eq!(mem.read(addr, size), 0xf0f0);
     }
 
     #[test]
@@ -162,8 +162,8 @@ mod tests {
         let size = 4;
 
         assert_eq!(mem.read(addr, size), 0);
-        mem.write(addr, size, 0xF0F0F0F0);
-        assert_eq!(mem.read(addr, size), 0xF0F0F0F0);
+        mem.write(addr, size, 0xf0f0f0f0);
+        assert_eq!(mem.read(addr, size), 0xf0f0f0f0);
     }
 
     #[test]

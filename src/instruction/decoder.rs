@@ -195,7 +195,7 @@ fn parse_type_s(insn: u32) -> Fields {
     // insn[31:25] -> imm[11:5]
     let imm_high = (insn & 0xfe000000) >> 20;
     // insn[11:7] -> imm[4:0]
-    let imm_low = (insn & 0xF80) >> 7;
+    let imm_low = (insn & 0xf80) >> 7;
     fields.imm = Some(imm_high | imm_low);
 
     fields
