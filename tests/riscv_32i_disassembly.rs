@@ -13,7 +13,7 @@ use std::fs::File;
 /// Tests most common instructions is easy to debug manner.
 #[test]
 fn test_riscv_32i_disassembly_1() {
-    let filename = "tests/test_riscv_32i_disassembly_1.txt";
+    let filename = "tests/riscv_32i_disassembly_1.txt";
     let f = File::open(filename).unwrap();
     let instructions = DisassemblyInstructionMemory::new(&f);
     let halt_addr = ia_simulator::run(&instructions);
@@ -26,7 +26,7 @@ fn test_riscv_32i_disassembly_1() {
 /// Tests all 32I instructions.
 #[test]
 fn test_riscv_32i_disassembly_2() {
-    let filename = "tests/test_riscv_32i_disassembly_2.txt";
+    let filename = "tests/riscv_32i_disassembly_2.txt";
     let f = File::open(filename).unwrap();
     let instructions = DisassemblyInstructionMemory::new(&f);
     let halt_addr = ia_simulator::run(&instructions);
