@@ -1,9 +1,9 @@
 //! Decodes RISC-V 32I instructions.
 
 
-use ::alu::AluSrc;
-use ::consts::*;
-use ::instruction::{Instruction, Fields, Format, Opcode, Function, Semantics};
+use alu::AluSrc;
+use consts::*;
+use instruction::{Instruction, Fields, Format, Opcode, Function, Semantics};
 
 
 /// Decodes RISC-V 32I instructions.
@@ -162,16 +162,22 @@ fn parse_type_r(insn: u32) -> Fields {
 
 /// Parses fields of I-type format instructions.
 fn parse_type_i(insn: u32) -> Fields {
+
+    fn is_shift(fields: &Fields) -> bool {
+        fields.opcode == Some(0x13) && // OpImm
+            (fields.funct3 == Some(0x1) || fields.funct3 == Some(0x5))
+    }
+
     let mut fields = Fields::default();
     fields.opcode = Some((insn & OPCODE_MASK));
     fields.funct3 = Some((insn & FUNCT3_MASK) >> FUNCT3_SHIFT);
     fields.rs1 = Some((insn & RS1_MASK) >> RS1_SHIFT);
     fields.rd = Some((insn & RD_MASK) >> RD_SHIFT);
-    if fields.funct3 == Some(0x1) || fields.funct3 == Some(0x5) {
-        // Shift: insn[24:20] -> shamt
+    if is_shift(&fields) {
+        // Shift: insn[24:20] -> shamt (imm)
         fields.imm = Some((insn & RS2_MASK) >> RS2_SHIFT);
     } else {
-        // Arithmetic or logical: insn[31:20] -> imm[11:0]
+        // Arithmetic, logical, load, or jalr: insn[31:20] -> imm[11:0]
         fields.imm = Some((insn & 0xfff00000) >> 20);
     }
 
@@ -266,9 +272,8 @@ mod tests {
     fn type_r() {
         // add x5, x6, x7
         let insn = 0x7302b3;
-        //let parsed_insn = Instruction::new(raw_insn);
-        //assert_eq!(parsed_insn.opcode, Opcode::Op);
         let fields = parse_type_r(insn);
+        assert_eq!(fields.opcode.unwrap(), 0x33); // Op
         assert_eq!(fields.funct3.unwrap(), 0x0);
         assert_eq!(fields.rd.unwrap(), 0x05);
         assert_eq!(fields.rs1.unwrap(), 0x06);
@@ -279,9 +284,8 @@ mod tests {
     fn type_i_arithmetic() {
         // addi x5, x6, 20
         let insn = 0x1430293;
-        //let parsed_insn = Instruction::new(raw_insn);
-        //assert_eq!(parsed_insn.opcode, Opcode::OpImm);
         let fields = parse_type_i(insn);
+        assert_eq!(fields.opcode.unwrap(), 0x13); // OpImm
         assert_eq!(fields.funct3.unwrap(), 0x0);
         assert_eq!(fields.rd.unwrap(), 0x05);
         assert_eq!(fields.rs1.unwrap(), 0x06);
@@ -292,9 +296,8 @@ mod tests {
     fn type_i_shift() {
         // slli x5, x6, 3
         let insn = 0x331293;
-        //let parsed_insn = Instruction::new(raw_insn);
-        //assert_eq!(parsed_insn.opcode, Opcode::OpImm);
         let fields = parse_type_i(insn);
+        assert_eq!(fields.opcode.unwrap(), 0x13); // OpImm
         assert_eq!(fields.funct3.unwrap(), 0x1);
         assert_eq!(fields.rd.unwrap(), 0x05);
         assert_eq!(fields.rs1.unwrap(), 0x06);
@@ -302,12 +305,23 @@ mod tests {
     }
 
     #[test]
+    fn type_i_load() {
+        // lhu x14, 1600(x0)
+        let insn = 0x64005703;
+        let fields = parse_type_i(insn);
+        assert_eq!(fields.opcode.unwrap(), 0x03); // Load
+        assert_eq!(fields.funct3.unwrap(), 0x5);
+        assert_eq!(fields.rd.unwrap(), 0xe);
+        assert_eq!(fields.rs1.unwrap(), 0x0);
+        assert_eq!(fields.imm.unwrap(), 1600);
+    }
+
+    #[test]
     fn type_s() {
         // sw x5, 40(x6)
         let insn = 0x2532423;
-        //let parsed_insn = Instruction::new(raw_insn);
-        //assert_eq!(parsed_insn.opcode, Opcode::Store);
         let fields = parse_type_s(insn);
+        assert_eq!(fields.opcode.unwrap(), 0x23); // Store
         assert_eq!(fields.funct3.unwrap(), 0x2);
         assert_eq!(fields.rs1.unwrap(), 0x06);
         assert_eq!(fields.rs2.unwrap(), 0x05);
@@ -319,8 +333,8 @@ mod tests {
         // beq x5, x6, 100
         let insn = 0x6628263;
         //let parsed_insn = Instruction::new(raw_insn);
-        //assert_eq!(parsed_insn.opcode, Opcode::Branch);
         let fields = parse_type_b(insn);
+        assert_eq!(fields.opcode.unwrap(), 0x63); // Branch
         assert_eq!(fields.funct3.unwrap(), 0x0);
         assert_eq!(fields.rs1.unwrap(), 0x05);
         assert_eq!(fields.rs2.unwrap(), 0x06);
@@ -331,9 +345,8 @@ mod tests {
     fn type_u() {
         // lui x5, 0x12345
         let insn = 0x123452b7;
-        //let parsed_insn = Instruction::new(raw_insn);
-        //assert_eq!(parsed_insn.opcode, Opcode::Lui);
         let fields = parse_type_u(insn);
+        assert_eq!(fields.opcode.unwrap(), 0x37); // Lui
         assert_eq!(fields.rd.unwrap(), 0x05);
         assert_eq!(fields.imm.unwrap(), 0x12345000);
     }
@@ -342,9 +355,8 @@ mod tests {
     fn type_j() {
         // jal x1, 100
         let insn = 0x64000ef;
-        //let parsed_insn = Instruction::new(raw_insn);
-        //assert_eq!(parsed_insn.opcode, Opcode::Jal);
         let fields = parse_type_j(insn);
+        assert_eq!(fields.opcode.unwrap(), 0x6f); // Jal
         assert_eq!(fields.rd.unwrap(), 0x01);
         assert_eq!(fields.imm.unwrap(), 100);
     }

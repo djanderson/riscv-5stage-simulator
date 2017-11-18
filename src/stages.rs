@@ -48,17 +48,14 @@ pub fn access_memory(
     insn: &Instruction,
     mem: &mut DataMemory,
     alu_result: i32,
+    rs2: i32,
 ) -> u32 {
     let mut mem_result: u32 = 0;
 
     if insn.semantics.mem_read {
         mem_result = mem.read(alu_result as usize, insn.semantics.mem_size);
     } else if insn.semantics.mem_write {
-        mem.write(
-            alu_result as usize,
-            insn.semantics.mem_size,
-            insn.fields.rs2.unwrap(),
-        );
+        mem.write(alu_result as usize, insn.semantics.mem_size, rs2 as u32);
     }
 
     mem_result

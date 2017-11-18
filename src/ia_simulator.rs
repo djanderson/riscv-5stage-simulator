@@ -10,8 +10,11 @@ use stages;
 
 
 /// Runs a single cycle instruction accurate RISC-V 32I simulator.
-pub fn run(instructions: &InstructionMemory) {
-    let mut mem = DataMemory::new(16384);
+///
+/// Returns the PC address of the HALT instruction.
+///
+pub fn run(instructions: &InstructionMemory) -> u32 {
+    let mut mem = DataMemory::new(1024);
     let mut reg = RegisterFile::new(0x0);
 
     loop {
@@ -30,17 +33,18 @@ pub fn run(instructions: &InstructionMemory) {
         let alu_result = stages::execute(&mut insn, rs1, rs2);
 
         // MEM: Access memory operand
-        let mem_result = stages::access_memory(&insn, &mut mem, alu_result);
+        let mem_result =
+            stages::access_memory(&insn, &mut mem, alu_result, rs2);
 
         // WB: Write result back to register
         stages::reg_writeback(&insn, &mut reg, alu_result, mem_result);
 
         if insn.function == Function::Halt {
             println!("Caught halt instruction at {:#0x}, exiting...", pc);
-            return;
+            return pc as u32;
         }
 
-        println!("{:#0x} - {:?}", pc, insn);
+        //println!("{:#0x} - {:?}", pc, insn);
 
         // Modify program counter for branch or jump
         if insn.semantics.branch &&
