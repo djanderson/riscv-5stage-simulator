@@ -1,14 +1,14 @@
 //! Instruction decode stage.
 
 
-use ::alu::{AluOp, AluSrc};
-use ::consts;
+use alu::{AluOp, AluSrc};
+use consts;
 
 pub mod decoder;
 
 
 /// A single machine instruction.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Instruction {
     value: u32,
 
@@ -57,8 +57,15 @@ impl Instruction {
 }
 
 
+impl Default for Instruction {
+    /// Constructs a canonical NOP encoded as ADDI x0, x0, 0.
+    fn default() -> Instruction {
+        Instruction::new(0x00_00_00_13)
+    }
+}
+
+
 /// Extracts the opcode from a raw instruction integer.
-// TODO: pull commented out tests from parser.rs for this fn
 fn int_to_opcode(insn: u32) -> Opcode {
     let opcode = insn & consts::OPCODE_MASK;
     match opcode {
@@ -95,7 +102,7 @@ fn opcode_to_format(opcode: Opcode) -> Format {
 
 
 /// RISC-V 32I fields (shamt -> imm).
-#[derive(Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Fields {
     pub rs1: Option<u32>,
     pub rs2: Option<u32>,
@@ -224,7 +231,7 @@ pub enum Function {
 
 
 /// Control unit semantics
-#[derive(Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Semantics {
     pub branch: bool,
     pub mem_read: bool,
@@ -234,4 +241,27 @@ pub struct Semantics {
     pub alu_src: AluSrc,
     pub reg_write: bool,
     pub mem_size: usize,
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Instruction::default() should be a NOP
+    #[test]
+    fn nop() {
+        let insn = Instruction::default();
+        assert_eq!(insn.fields.rd, Some(0));
+        assert_eq!(insn.fields.rs1, Some(0));
+        assert_eq!(insn.fields.rs2, None);
+        assert_eq!(insn.fields.imm, Some(0));
+        assert!(!insn.semantics.branch);
+        assert!(!insn.semantics.mem_read);
+        assert!(!insn.semantics.mem_to_reg);
+        assert_eq!(insn.semantics.alu_op, AluOp::Add);
+        assert_eq!(insn.semantics.alu_src, AluSrc::Imm);
+        assert!(insn.semantics.reg_write);
+    }
+
 }

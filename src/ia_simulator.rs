@@ -22,17 +22,17 @@ pub fn run(instructions: &InstructionMemory) -> u32 {
         let pc = reg.pc.read() as usize;
         reg.pc.write((pc + WORD_SIZE) as u32);
 
-        // IF: Instruction fetch from memory
+        // IF: Instruction fetch
         let raw_insn = stages::insn_fetch(instructions, pc);
 
-        // ID: Instruction decode & register read
+        // ID: Instruction decode and register file read
         let mut insn = stages::insn_decode(raw_insn);
         let (rs1, rs2) = stages::reg_read(&insn, &reg);
 
-        // EX: Execute operation or calculate address
+        // EX: Execution or address calculation
         let alu_result = stages::execute(&mut insn, rs1, rs2);
 
-        // MEM: Access memory operand
+        // MEM: Data memory access
         let mem_result =
             stages::access_memory(&insn, &mut mem, alu_result, rs2);
 

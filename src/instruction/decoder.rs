@@ -3,6 +3,7 @@
 
 use alu::AluSrc;
 use consts::*;
+use immediates;
 use instruction::{Instruction, Fields, Format, Opcode, Function, Semantics};
 
 
@@ -16,6 +17,7 @@ pub fn decode(insn: &mut Instruction) {
         Format::U => parse_type_u(insn.value),
         Format::J => parse_type_j(insn.value),
     };
+    insn.fields.imm = immediates::gen(&insn);
     insn.function = insn_to_fn(insn);
     insn.semantics = insn_to_semantics(insn);
 }

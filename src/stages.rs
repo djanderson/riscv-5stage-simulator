@@ -2,7 +2,6 @@
 
 
 use alu::{alu, AluSrc};
-use immediates;
 use instruction::{Instruction, Opcode};
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
@@ -31,8 +30,6 @@ pub fn reg_read(insn: &Instruction, reg: &RegisterFile) -> (i32, i32) {
 
 /// EX: Execute operation or calculate address.
 pub fn execute(insn: &mut Instruction, rs1: i32, rs2: i32) -> i32 {
-    insn.fields.imm = immediates::gen(&insn);
-
     let src1 = rs1;
     let src2 = match insn.semantics.alu_src {
         AluSrc::Reg => rs2,
