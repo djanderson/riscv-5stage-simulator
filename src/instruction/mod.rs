@@ -60,7 +60,7 @@ impl Instruction {
 impl Default for Instruction {
     /// Constructs a canonical NOP encoded as ADDI x0, x0, 0.
     fn default() -> Instruction {
-        Instruction::new(0x00_00_00_13)
+        Instruction::new(consts::NOP)
     }
 }
 

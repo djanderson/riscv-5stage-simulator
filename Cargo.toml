@@ -8,7 +8,7 @@ name = "riscv_5stage_simulator"
 path = "src/lib.rs"
 
 [[bin]]
-name = "riscv_disassembly_parser"
+name = "casim"
 path = "src/main.rs"
 doc = false
 

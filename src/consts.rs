@@ -7,6 +7,9 @@ pub const HALT: u32 = 0x3f;
 /// Size of a register in bytes.
 pub const WORD_SIZE: usize = 4;
 
+/// A canonical RISC-V NOP, encoded as ADDI x0, x0, 0.
+pub const NOP: u32 = 0x13;
+
 // Masks to isolate specific parts of the instruction using logical AND (&)
 pub const FUNCT7_MASK: u32 = 0xfe000000;
 pub const FUNCT3_MASK: u32 = 0x7000;

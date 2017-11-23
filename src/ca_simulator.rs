@@ -1,8 +1,10 @@
 //! Cycle accurate 5-stage pipelining RISC-V 32I simulator.
 
 
-use consts::WORD_SIZE;
-use instruction::{Function, Opcode};
+use consts;
+use hazards::{ex_hazard_src1, ex_hazard_src2, mem_hazard_src1,
+              mem_hazard_src2, stall};
+use instruction::{Function, Instruction, Opcode};
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
 use pipeline::{IfIdRegister, IdExRegister, ExMemRegister, MemWbRegister};
@@ -26,28 +28,41 @@ pub fn run(instructions: &InstructionMemory) -> u32 {
 
     // clock -> rising edge, !clock -> falling edge
     let mut clock: bool = true;
+    let mut bubble: bool = false;
 
     loop {
         if clock {
-            // Read and increment program counter
-            let pc = reg.pc.read() as usize;
-            let npc = (pc + WORD_SIZE) as u32;
+            if bubble {
+                bubble = false;
+            } else {
+                // Read and increment program counter
+                let pc = reg.pc.read() as usize;
+                let npc = (pc + consts::WORD_SIZE) as u32;
+                reg.pc.write(npc);
 
-            // IF: Instruction fetch
-            let raw_insn = stages::insn_fetch(instructions, pc);
+                // IF: Instruction fetch
+                let raw_insn = stages::insn_fetch(instructions, pc);
 
-            if_id.npc = npc;
-            if_id.raw_insn = raw_insn;
+                if_id.npc = npc;
+                if_id.raw_insn = raw_insn;
+            }
         } else {
             // ID: Instruction decode and register file read
             let raw_insn = if_id.raw_insn;
             let insn = stages::insn_decode(raw_insn);
-            let (rs1, rs2) = stages::reg_read(&insn, &reg);
 
-            id_ex.npc = if_id.npc;
-            id_ex.insn = insn;
-            id_ex.rs1 = rs1;
-            id_ex.rs2 = rs2;
+            if stall(if_id, id_ex) {
+                bubble = true;
+                id_ex.insn = Instruction::default(); // NOP
+            } else {
+                id_ex.npc = if_id.npc;
+                id_ex.insn = insn;
+
+                let (rs1, rs2) = stages::reg_read(&insn, &reg);
+                id_ex.rs1 = rs1;
+                id_ex.rs2 = rs2;
+            }
+
         }
 
         if clock {
@@ -56,8 +71,29 @@ pub fn run(instructions: &InstructionMemory) -> u32 {
 
             let pc = if npc == 0 { 0 } else { npc - 4 };
             let mut insn = id_ex.insn;
-            let rs1 = id_ex.rs1;
-            let rs2 = id_ex.rs2;
+
+            // ALU src1 mux
+            let rs1: i32;
+            if ex_hazard_src1(id_ex, ex_mem) {
+                rs1 = ex_mem.alu_result; // forward from previous ALU result
+            } else if mem_hazard_src1(id_ex, ex_mem, mem_wb) {
+                rs1 = mem_wb.mem_result as i32; // forward from data memory
+            } else {
+                rs1 = id_ex.rs1;
+
+            }
+
+            // ALU src2 mux
+            let rs2: i32;
+            if ex_hazard_src2(id_ex, ex_mem) {
+                rs2 = ex_mem.alu_result; // forward from previous ALU result
+            } else if mem_hazard_src2(id_ex, ex_mem, mem_wb) {
+                rs2 = mem_wb.mem_result as i32; // forward from data memory
+            } else {
+                rs2 = id_ex.rs2;
+
+            }
+
             let alu_result = stages::execute(&mut insn, rs1, rs2);
 
             // Modify program counter for branch or jump

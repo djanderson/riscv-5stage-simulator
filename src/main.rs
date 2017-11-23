@@ -2,7 +2,7 @@ extern crate riscv_5stage_simulator;
 
 
 use riscv_5stage_simulator::memory::instruction::DisassemblyInstructionMemory;
-use riscv_5stage_simulator::ia_simulator;
+use riscv_5stage_simulator::ca_simulator;
 
 use std::env;
 use std::fs::File;
@@ -51,5 +51,5 @@ fn main() {
 
     println!("{}", LOGO);
 
-    ia_simulator::run(&instructions);
+    ca_simulator::run(&instructions);
 }

@@ -1,7 +1,8 @@
-use instruction::Instruction;
+ use instruction::Instruction;
 
 
 /// Pipeline register between instruction fetch and instruction decode stages.
+#[derive(Clone, Copy, Debug)]
 pub struct IfIdRegister {
     /// Next PC
     pub npc: u32,
@@ -21,6 +22,8 @@ impl IfIdRegister {
 }
 
 
+/// Pipeline register between instruction decode and execution stages.
+#[derive(Clone, Copy, Debug)]
 pub struct IdExRegister {
     pub npc: u32,
     pub insn: Instruction,
@@ -41,6 +44,8 @@ impl IdExRegister {
 }
 
 
+/// Pipeline register between execution and memory stages.
+#[derive(Clone, Copy, Debug)]
 pub struct ExMemRegister {
     pub npc: u32,
     pub insn: Instruction,
@@ -61,6 +66,8 @@ impl ExMemRegister {
 }
 
 
+/// Pipeline register between memory and writeback stages.
+#[derive(Clone, Copy, Debug)]
 pub struct MemWbRegister {
     pub insn: Instruction,
     pub alu_result: i32,
