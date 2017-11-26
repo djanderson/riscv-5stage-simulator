@@ -4,8 +4,10 @@
 /// Special simulator-only instruction signal to halt simulator.
 pub const HALT: u32 = 0x3f;
 
-/// Size of a register in bytes.
+/// Sizes in bytes.
 pub const WORD_SIZE: usize = 4;
+pub const HALFWORD_SIZE: usize = 2;
+pub const BYTE_SIZE: usize = 1;
 
 /// A canonical RISC-V NOP, encoded as ADDI x0, x0, 0.
 pub const NOP: u32 = 0x13;

@@ -1,8 +1,10 @@
 extern crate riscv_5stage_simulator;
 
 
-use riscv_5stage_simulator::memory::instruction::DisassemblyInstructionMemory;
 use riscv_5stage_simulator::ca_simulator;
+use riscv_5stage_simulator::memory::data::DataMemory;
+use riscv_5stage_simulator::memory::instruction::DisassemblyInstructionMemory;
+use riscv_5stage_simulator::register::RegisterFile;
 
 use std::env;
 use std::fs::File;
@@ -40,6 +42,8 @@ fn main() {
     let program_name = &args[0];
 
     let instructions: DisassemblyInstructionMemory;
+    let mut data_memory = DataMemory::new(1024);
+    let mut registers = RegisterFile::new(0x0);
 
     if let Some(filename) = args.get(1) {
         let f = File::open(filename).expect("error opening file");
@@ -51,5 +55,5 @@ fn main() {
 
     println!("{}", LOGO);
 
-    ca_simulator::run(&instructions);
+    ca_simulator::run(&instructions, &mut data_memory, &mut registers);
 }

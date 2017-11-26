@@ -3,7 +3,7 @@
 
 use consts;
 use hazards::{ex_hazard_src1, ex_hazard_src2, mem_hazard_src1,
-              mem_hazard_src2, stall};
+              mem_hazard_src2, load_hazard};
 use instruction::{Function, Instruction, Opcode};
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
@@ -17,9 +17,11 @@ use stages;
 /// Returns the address of the instruction and the register file at the point
 /// when a HALT hits the execution stage.
 ///
-pub fn run(instructions: &InstructionMemory) -> (usize, RegisterFile) {
-    let mut mem = DataMemory::new(1024);
-    let mut reg = RegisterFile::new(0x0);
+pub fn run(
+    insns: &InstructionMemory,
+    mut mem: &mut DataMemory,
+    mut reg: &mut RegisterFile,
+) -> usize {
 
     // Pipline registers
     let mut if_id = IfIdRegister::new();
@@ -27,39 +29,33 @@ pub fn run(instructions: &InstructionMemory) -> (usize, RegisterFile) {
     let mut ex_mem = ExMemRegister::new();
     let mut mem_wb = MemWbRegister::new();
 
-    let mut bubble: bool = false;
-
     loop {
-
         // Read-only copy of current state of pipeline registers
         let ro_if_id = if_id;
         let ro_id_ex = id_ex;
         let ro_ex_mem = ex_mem;
         let ro_mem_wb = mem_wb;
 
-        // IF: Instruction fetch
-        if bubble {
-            bubble = false;
+        let stall = load_hazard(ro_if_id, ro_id_ex);
+
+        if stall {
+            id_ex.insn = Instruction::default(); // NOP
         } else {
             // Read and increment program counter
             let pc = reg.pc.read() as usize;
             let npc = (pc + consts::WORD_SIZE) as u32;
             reg.pc.write(npc);
 
-            let raw_insn = stages::insn_fetch(instructions, pc);
+            // IF: Instruction fetch
+            let raw_insn = stages::insn_fetch(insns, pc);
 
             if_id.npc = npc;
             if_id.raw_insn = raw_insn;
-        }
 
-        // ID: Instruction decode and register file read
-        let raw_insn = ro_if_id.raw_insn;
-        let insn = stages::insn_decode(raw_insn);
+            // ID: Instruction decode and register file read
+            let raw_insn = ro_if_id.raw_insn;
+            let insn = stages::insn_decode(raw_insn);
 
-        if stall(ro_if_id, ro_id_ex) {
-            bubble = true;
-            id_ex.insn = Instruction::default(); // NOP
-        } else {
             id_ex.npc = ro_if_id.npc;
             id_ex.insn = insn;
 
@@ -96,7 +92,6 @@ pub fn run(instructions: &InstructionMemory) -> (usize, RegisterFile) {
             id_ex.rs2 = rs2;
         }
 
-
         // EX: Execution or address calculation
         let mut npc = ro_id_ex.npc;
 
@@ -114,7 +109,6 @@ pub fn run(instructions: &InstructionMemory) -> (usize, RegisterFile) {
             }
         } else {
             rs1 = ro_id_ex.rs1;
-
         }
 
         // ALU src2 mux
@@ -128,7 +122,6 @@ pub fn run(instructions: &InstructionMemory) -> (usize, RegisterFile) {
             }
         } else {
             rs2 = ro_id_ex.rs2;
-
         }
 
         let alu_result = stages::execute(&mut insn, rs1, rs2);
@@ -142,12 +135,11 @@ pub fn run(instructions: &InstructionMemory) -> (usize, RegisterFile) {
                 Opcode::Jalr => alu_result & 0xfffe, // LSB -> 0
                 _ => (pc as i32) + imm,
             } as u32;
-
         }
 
         if insn.function == Function::Halt {
             println!("Caught halt instruction at {:#0x}, exiting...", pc);
-            return (pc as usize, reg);
+            return pc as usize;
         }
 
         ex_mem.npc = npc;
@@ -191,16 +183,14 @@ mod tests {
     /// cycle is made available to the instruction decode/register read stage.
     ///
     /// See Patterson & Hennessy pgs 297-302 for a description of this sequence
-    /// and the logic associated with the required forwarding.
+    /// and the logic associated with data hazard detection.
     #[test]
     fn forwarding() {
-        let insn1 = Instruction::new(0x00_20_00_93); // addi, x1, x0, 2
-        let insn2 = Instruction::new(0x00_10_01_93); // addi, x3, x0, 1
-        let insn3 = Instruction::new(0x40_30_81_33); // sub x2, x1, x3
-        let insn4 = Instruction::new(0x00_51_76_33); // and x12, x2, x5
-        let insn5 = Instruction::new(0x00_23_66_b3); // or x13, x6, x2
-        let insn6 = Instruction::new(0x00_21_07_33); // add x14, x2, x2
-        let insn7 = Instruction::new(0x06_f1_12_23); // sh, x15, 100(x2)
+        let insn1 = Instruction::new(0x40_30_81_33); // sub x2, x1, x3
+        let insn2 = Instruction::new(0x00_51_76_33); // and x12, x2, x5
+        let insn3 = Instruction::new(0x00_23_66_b3); // or x13, x6, x2
+        let insn4 = Instruction::new(0x00_21_07_33); // add x14, x2, x2
+        let insn5 = Instruction::new(0x06_f1_12_23); // sh, x15, 100(x2)
 
         let insns = vec![
             insn1.as_u32(),
@@ -208,10 +198,6 @@ mod tests {
             insn3.as_u32(),
             insn4.as_u32(),
             insn5.as_u32(),
-            insn6.as_u32(),
-            insn7.as_u32(),
-            consts::NOP,
-            consts::NOP,
             consts::NOP,
             consts::NOP,
             consts::NOP,
@@ -219,20 +205,74 @@ mod tests {
             consts::NOP,
             consts::NOP,
             consts::NOP,
+        ];
+
+        let insn_memory = TestInstructionMemory::new(insns);
+        let mut data_memory = DataMemory::new(1024);
+        let mut registers = RegisterFile::new(0x0);
+
+        // Set initial registers so that sub x2, x1, x3 -> x2 = 1
+        registers.gpr[1].write(2);
+        registers.gpr[3].write(1);
+        registers.gpr[15].write(0xffff);
+
+        let halt_addr = run(&insn_memory, &mut data_memory, &mut registers);
+
+        assert_eq!(halt_addr, 0x20);
+        assert_eq!(registers.gpr[2].read(), 1); // x2 == 1
+        assert_eq!(registers.gpr[3].read(), 1); // x3 == 1
+        assert_eq!(registers.gpr[12].read(), 0); // x12 == 0
+        assert_eq!(registers.gpr[13].read(), 1); // x13 == 1
+        assert_eq!(registers.gpr[14].read(), 2); // x14 == 2
+
+        assert_eq!(data_memory.read(101, consts::HALFWORD_SIZE), 0xffff);
+    }
+
+    /// Tests load-use hazard detection and bubble insertion.
+    ///
+    /// See Patterson & Hennessy pgs 303-306 for a description of this sequence
+    /// and the logic associated with load-use hazard detection.
+    #[test]
+    fn bubble() {
+        let insn1 = Instruction::new(0x01_40_a1_03); // lw, x2, 20(x1)
+        let insn2 = Instruction::new(0x00_51_72_33); // and x4, x2, x5
+        let insn3 = Instruction::new(0x00_61_64_33); // or x8, x2, x6
+        let insn4 = Instruction::new(0x00_22_04_b3); // add x9, x4, x2
+        let insn5 = Instruction::new(0x40_73_00_b3); // sub x1, x6, x7
+
+        let insns = vec![
+            insn1.as_u32(),
+            insn2.as_u32(),
+            insn3.as_u32(),
+            insn4.as_u32(),
+            insn5.as_u32(),
+            consts::NOP,
+            consts::NOP,
+            consts::NOP,
+            consts::HALT,
+            consts::NOP,
             consts::NOP,
             consts::NOP,
         ];
 
         let insn_memory = TestInstructionMemory::new(insns);
-        let (halt_addr, reg) = run(&insn_memory);
+        let mut data_memory = DataMemory::new(1024);
+        let mut registers = RegisterFile::new(0x0);
 
-        assert_eq!(halt_addr, 0x30);
-        assert_eq!(reg.gpr[2].read(), 1); // x2 == 1
-        assert_eq!(reg.gpr[3].read(), 1); // x3 == 1
-        assert_eq!(reg.gpr[12].read(), 0); // x12 == 0
-        assert_eq!(reg.gpr[13].read(), 1); // x13 == 1
-        assert_eq!(reg.gpr[14].read(), 2); // x14 == 2
-        assert_eq!(reg.gpr[15].read(), 0); // x15 == 0
+        data_memory.write(20, consts::WORD_SIZE, 5);
+
+        registers.gpr[4].write(1);
+        registers.gpr[5].write(3);
+        registers.gpr[6].write(2);
+        registers.gpr[7].write(1);
+
+        let halt_addr = run(&insn_memory, &mut data_memory, &mut registers);
+
+        assert_eq!(halt_addr, 0x20);
+        assert_eq!(registers.gpr[4].read(), 1);
+        assert_eq!(registers.gpr[8].read(), 7);
+        assert_eq!(registers.gpr[9].read(), 6);
+        assert_eq!(registers.gpr[1].read(), 1);
     }
 
 }

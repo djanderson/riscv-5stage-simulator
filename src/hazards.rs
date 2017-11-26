@@ -55,8 +55,8 @@ pub fn mem_hazard_src2(
 }
 
 
-/// Indicates a condition that will require a pipeline stall.
-pub fn stall(if_id: IfIdRegister, id_ex: IdExRegister) -> bool {
+/// Indicates a load-use hazard that will require a pipeline stall.
+pub fn load_hazard(if_id: IfIdRegister, id_ex: IdExRegister) -> bool {
     // Before decode stage, rs1 and rs2 need to be extracted manually
     let if_id_rs1 = Some((if_id.raw_insn & RS1_MASK) >> RS1_SHIFT);
     let if_id_rs2 = Some((if_id.raw_insn & RS2_MASK) >> RS2_SHIFT);
