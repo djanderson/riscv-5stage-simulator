@@ -3,7 +3,7 @@
 //! Provides a loader for disassembler output.
 
 
-use ::consts::HALT;
+use consts::HALT;
 
 use regex::{Captures, Regex};
 
@@ -37,7 +37,7 @@ pub trait InstructionMemory {
 
 /// Instruction memory that populates memory from disassembler output.
 pub struct DisassemblyInstructionMemory {
-    pub mem: Vec<u32>,
+    mem: Vec<u32>,
 }
 
 
@@ -82,6 +82,35 @@ impl DisassemblyInstructionMemory {
 
 
 impl InstructionMemory for DisassemblyInstructionMemory {
+    /// Reads an instruction from `InstructionMemory`.
+    ///
+    /// The requested address is right-shifted by 2 to ensure word alignment.
+    ///
+    fn read(&self, addr: usize) -> u32 {
+        let word_addr = addr >> 2;
+
+        if word_addr >= self.mem.len() {
+            panic!("Address 0x{:0x} out of range", addr);
+        }
+
+        self.mem[word_addr]
+    }
+}
+
+
+pub struct TestInstructionMemory {
+    mem: Vec<u32>,
+}
+
+
+impl TestInstructionMemory {
+    pub fn new(mem: Vec<u32>) -> TestInstructionMemory {
+        TestInstructionMemory { mem }
+    }
+}
+
+
+impl InstructionMemory for TestInstructionMemory {
     /// Reads an instruction from `InstructionMemory`.
     ///
     /// The requested address is right-shifted by 2 to ensure word alignment.

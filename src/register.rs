@@ -4,6 +4,7 @@
 /// A complete RV32I register file.
 ///
 /// Holds 32 general purpose registers and a program counter register.
+#[derive(Debug)]
 pub struct RegisterFile {
     pub pc: Register,
     pub gpr: [Register; 32],
@@ -25,7 +26,7 @@ impl RegisterFile {
 
 
 /// A write-protectable register.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Register {
     /// The current register value.
     value: u32,

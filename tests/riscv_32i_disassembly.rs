@@ -42,8 +42,8 @@ fn test_ca_simulator_riscv_32i_disassembly_1() {
     let filename = "tests/riscv_32i_disassembly_1.txt";
     let f = File::open(filename).unwrap();
     let instructions = DisassemblyInstructionMemory::new(&f);
-    let halt_addr = ca_simulator::run(&instructions);
-    let expected_halt_addr: u32 = 0x4c0;
+    let (halt_addr, _reg) = ca_simulator::run(&instructions);
+    let expected_halt_addr = 0x4c0;
 
     assert_eq!(halt_addr, expected_halt_addr);
 }
@@ -55,8 +55,8 @@ fn test_ca_simulator_riscv_32i_disassembly_2() {
     let filename = "tests/riscv_32i_disassembly_2.txt";
     let f = File::open(filename).unwrap();
     let instructions = DisassemblyInstructionMemory::new(&f);
-    let halt_addr = ca_simulator::run(&instructions);
-    let expected_halt_addr: u32 = 0x56c;
+    let (halt_addr, _reg) = ca_simulator::run(&instructions);
+    let expected_halt_addr = 0x56c;
 
     assert_eq!(halt_addr, expected_halt_addr);
 }
