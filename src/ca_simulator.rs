@@ -1,172 +1,41 @@
 //! Cycle accurate 5-stage pipelining RISC-V 32I simulator.
 
 
-use consts;
-use hazards::{ex_hazard_src1, ex_hazard_src2, mem_hazard_src1,
-              mem_hazard_src2, load_hazard};
-use instruction::{Function, Instruction, Opcode};
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
-use pipeline::{IfIdRegister, IdExRegister, ExMemRegister, MemWbRegister};
+use pipeline::Pipeline;
 use register::RegisterFile;
-use stages;
 
 
 /// Runs a cycle accurate RISC-V 32I simulator.
 ///
-/// Returns the address of the instruction and the register file at the point
-/// when a HALT hits the execution stage.
+/// Returns the address of the HALT instruction.
 ///
 pub fn run(
     insns: &InstructionMemory,
     mut mem: &mut DataMemory,
     mut reg: &mut RegisterFile,
 ) -> usize {
+    use pipeline::stages::*;
 
     // Pipline registers
-    let mut if_id = IfIdRegister::new();
-    let mut id_ex = IdExRegister::new();
-    let mut ex_mem = ExMemRegister::new();
-    let mut mem_wb = MemWbRegister::new();
+    let mut write_pipeline = Pipeline::new();
+    let mut read_pipeline = Pipeline::new();
 
     loop {
-        // Read-only copy of current state of pipeline registers
-        let ro_if_id = if_id;
-        let ro_id_ex = id_ex;
-        let ro_ex_mem = ex_mem;
-        let ro_mem_wb = mem_wb;
+        insn_fetch(&read_pipeline, &mut write_pipeline, insns, &mut reg);
 
-        let stall = load_hazard(ro_if_id, ro_id_ex);
+        insn_decode(&read_pipeline, &mut write_pipeline, &mut reg);
 
-        if stall {
-            id_ex.insn = Instruction::default(); // NOP
-        } else {
-            // Read and increment program counter
-            let pc = reg.pc.read() as usize;
-            let npc = (pc + consts::WORD_SIZE) as u32;
-            reg.pc.write(npc);
-
-            // IF: Instruction fetch
-            let raw_insn = stages::insn_fetch(insns, pc);
-
-            if_id.npc = npc;
-            if_id.raw_insn = raw_insn;
-
-            // ID: Instruction decode and register file read
-            let raw_insn = ro_if_id.raw_insn;
-            let insn = stages::insn_decode(raw_insn);
-
-            id_ex.npc = ro_if_id.npc;
-            id_ex.insn = insn;
-
-            let rs1: i32;
-            let rs2: i32;
-            //let mut (rs1, rs2) = stages::reg_read(&insn, &reg);
-
-            // Do register forwarding (see Patterson & Hennessy pg 301)
-            if mem_wb.insn.semantics.reg_write &&
-                (mem_wb.insn.fields.rd == insn.fields.rs1)
-            {
-                rs1 = match mem_wb.insn.semantics.mem_read {
-                    true => mem_wb.mem_result as i32,
-                    false => mem_wb.alu_result,
-                };
-            } else {
-                rs1 = reg.gpr[insn.fields.rs1.unwrap_or(0) as usize]
-                    .read() as i32;
-            }
-
-            if mem_wb.insn.semantics.reg_write &&
-                (mem_wb.insn.fields.rd == insn.fields.rs2)
-            {
-                rs2 = match mem_wb.insn.semantics.mem_read {
-                    true => mem_wb.mem_result as i32,
-                    false => mem_wb.alu_result,
-                };
-            } else {
-                rs2 = reg.gpr[insn.fields.rs2.unwrap_or(0) as usize]
-                    .read() as i32;
-            }
-
-            id_ex.rs1 = rs1;
-            id_ex.rs2 = rs2;
+        if let Some(halt_addr) = execute(&read_pipeline, &mut write_pipeline) {
+            return halt_addr
         }
 
-        // EX: Execution or address calculation
-        let mut npc = ro_id_ex.npc;
+        access_memory(&read_pipeline, &mut write_pipeline, &mut mem);
 
-        let pc = if npc == 0 { 0 } else { npc - 4 };
-        let mut insn = ro_id_ex.insn;
+        reg_writeback(&read_pipeline, &mut reg);
 
-        // ALU src1 mux
-        let rs1: i32;
-        if ex_hazard_src1(ro_id_ex, ro_ex_mem) {
-            rs1 = ro_ex_mem.alu_result; // forward from previous ALU result
-        } else if mem_hazard_src1(ro_id_ex, ro_ex_mem, ro_mem_wb) {
-            rs1 = match ro_mem_wb.insn.semantics.mem_read {
-                true => ro_mem_wb.mem_result as i32, // forward data memory
-                false => ro_mem_wb.alu_result, // forward previous ALU result
-            }
-        } else {
-            rs1 = ro_id_ex.rs1;
-        }
-
-        // ALU src2 mux
-        let rs2: i32;
-        if ex_hazard_src2(ro_id_ex, ro_ex_mem) {
-            rs2 = ro_ex_mem.alu_result; // forward previous ALU result
-        } else if mem_hazard_src2(ro_id_ex, ro_ex_mem, ro_mem_wb) {
-            rs2 = match ro_mem_wb.insn.semantics.mem_read {
-                true => ro_mem_wb.mem_result as i32, // forward data memory
-                false => ro_mem_wb.alu_result, // forward previous ALU result
-            }
-        } else {
-            rs2 = ro_id_ex.rs2;
-        }
-
-        let alu_result = stages::execute(&mut insn, rs1, rs2);
-
-        // Modify program counter for branch or jump
-        if insn.semantics.branch &&
-            !(insn.opcode == Opcode::Branch && alu_result != 0)
-        {
-            let imm = insn.fields.imm.unwrap() as i32;
-            npc = match insn.opcode {
-                Opcode::Jalr => alu_result & 0xfffe, // LSB -> 0
-                _ => (pc as i32) + imm,
-            } as u32;
-        }
-
-        if insn.function == Function::Halt {
-            println!("Caught halt instruction at {:#0x}, exiting...", pc);
-            return pc as usize;
-        }
-
-        ex_mem.npc = npc;
-        ex_mem.insn = ro_id_ex.insn;
-        ex_mem.alu_result = alu_result;
-        ex_mem.rs2 = rs2;
-
-        // MEM: Data memory access
-        let insn = ro_ex_mem.insn;
-        let alu_result = ro_ex_mem.alu_result;
-        let rs2 = ro_ex_mem.rs2;
-        let mem_result =
-            stages::access_memory(&insn, &mut mem, alu_result, rs2);
-
-        mem_wb.insn = insn;
-        mem_wb.alu_result = alu_result;
-        mem_wb.mem_result = mem_result;
-
-
-        // WB: Write result back to register
-        let insn = ro_mem_wb.insn;
-        let alu_result = ro_mem_wb.alu_result;
-        let mem_result = ro_mem_wb.mem_result;
-
-        stages::reg_writeback(&insn, &mut reg, alu_result, mem_result);
-
-        //println!("{:#0x} - {:?}", pc, insn);
+        read_pipeline = write_pipeline;
     }
 
 }
@@ -175,7 +44,11 @@ pub fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use consts;
+    use instruction::Instruction;
     use memory::instruction::TestInstructionMemory;
+
 
     /// Tests forwarding to ALU from EX/MEM and MEM/WB pipeline registers.
     ///

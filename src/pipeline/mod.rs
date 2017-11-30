@@ -1,5 +1,31 @@
- use instruction::Instruction;
+//! Pipeline definition.
 
+
+use ::instruction::Instruction;
+
+pub mod stages;
+
+
+/// Pipeline holding four inter-stage registers
+#[derive(Clone, Copy, Debug)]
+pub struct Pipeline {
+    pub if_id: IfIdRegister,
+    pub id_ex: IdExRegister,
+    pub ex_mem: ExMemRegister,
+    pub mem_wb: MemWbRegister,
+}
+
+
+impl Pipeline {
+    pub fn new() -> Pipeline {
+        Pipeline {
+            if_id: IfIdRegister::new(),
+            id_ex: IdExRegister::new(),
+            ex_mem: ExMemRegister::new(),
+            mem_wb: MemWbRegister::new(),
+        }
+    }
+}
 
 /// Pipeline register between instruction fetch and instruction decode stages.
 #[derive(Clone, Copy, Debug)]
