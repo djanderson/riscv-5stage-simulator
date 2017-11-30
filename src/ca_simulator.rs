@@ -28,8 +28,11 @@ pub fn run(
         insn_decode(&read_pipeline, &mut write_pipeline, &mut reg);
 
         if let Some(halt_addr) = execute(&read_pipeline, &mut write_pipeline) {
+            println!("Caught halt instruction at {:#0x}, exiting", halt_addr);
             return halt_addr
         }
+
+        reg.pc.write(write_pipeline.ex_mem.npc);
 
         access_memory(&read_pipeline, &mut write_pipeline, &mut mem);
 

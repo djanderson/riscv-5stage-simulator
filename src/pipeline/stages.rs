@@ -92,6 +92,7 @@ pub fn execute(
     write_pipeline: &mut Pipeline,
 ) -> Option<usize> {
     let mut npc = read_pipeline.id_ex.npc;
+
     let pc = if npc == 0 { 0 } else { npc - 4 };
     let mut insn = read_pipeline.id_ex.insn;
 
@@ -141,7 +142,6 @@ pub fn execute(
     }
 
     if insn.function == Function::Halt {
-        println!("Caught halt instruction at {:#0x}, exiting...", pc);
         return Some(pc as usize);
     }
 
