@@ -1,9 +1,11 @@
 //! Cycle accurate 5-stage pipelining RISC-V 32I simulator.
 
 
+use hazards;
+use instruction::Instruction;
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
-use pipeline::Pipeline;
+use pipeline::{PcSrc, Pipeline, IfIdRegister, IdExRegister};
 use register::RegisterFile;
 
 
@@ -23,16 +25,29 @@ pub fn run(
     let mut read_pipeline = Pipeline::new();
 
     loop {
-        insn_fetch(&read_pipeline, &mut write_pipeline, insns, &mut reg);
-
-        insn_decode(&read_pipeline, &mut write_pipeline, &mut reg);
+        if hazards::load_hazard(&read_pipeline) {
+            write_pipeline.id_ex.insn = Instruction::default(); // NOP
+        } else {
+            insn_fetch(&mut write_pipeline, insns, &mut reg);
+            insn_decode(&read_pipeline, &mut write_pipeline, &mut reg);
+        }
 
         if let Some(halt_addr) = execute(&read_pipeline, &mut write_pipeline) {
             println!("Caught halt instruction at {:#0x}, exiting", halt_addr);
-            return halt_addr
+            return halt_addr;
         }
 
         reg.pc.write(write_pipeline.ex_mem.npc);
+        if write_pipeline.ex_mem.pc_src == PcSrc::Branch {
+            // Branching - flush
+            println!(
+                "Branching - {:#0x} -> {:#0x} flush",
+                read_pipeline.id_ex.npc - 4,
+                write_pipeline.ex_mem.npc
+            );
+            write_pipeline.if_id = IfIdRegister::new();
+            write_pipeline.id_ex = IdExRegister::new();
+        }
 
         access_memory(&read_pipeline, &mut write_pipeline, &mut mem);
 

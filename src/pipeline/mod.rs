@@ -1,7 +1,7 @@
 //! Pipeline definition.
 
 
-use ::instruction::Instruction;
+use instruction::Instruction;
 
 pub mod stages;
 
@@ -26,6 +26,7 @@ impl Pipeline {
         }
     }
 }
+
 
 /// Pipeline register between instruction fetch and instruction decode stages.
 #[derive(Clone, Copy, Debug)]
@@ -77,6 +78,7 @@ pub struct ExMemRegister {
     pub insn: Instruction,
     pub alu_result: i32,
     pub rs2: i32,
+    pub pc_src: PcSrc,
 }
 
 
@@ -87,6 +89,7 @@ impl ExMemRegister {
             insn: Instruction::default(),
             alu_result: 0,
             rs2: 0,
+            pc_src: PcSrc::Next,
         }
     }
 }
@@ -109,4 +112,14 @@ impl MemWbRegister {
             mem_result: 0,
         }
     }
+}
+
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum PcSrc {
+    /// PC + 4
+    Next,
+
+    /// Branch target
+    Branch,
 }

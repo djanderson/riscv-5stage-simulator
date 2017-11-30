@@ -2,27 +2,21 @@
 
 
 use consts;
-use hazards::{ex_hazard_src1, ex_hazard_src2, mem_hazard_src1,
-              mem_hazard_src2, load_hazard};
-use instruction::{Function, Instruction, Opcode};
+use hazards;
+use instruction::{Function, Opcode};
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
-use pipeline::Pipeline;
+use pipeline::{PcSrc, Pipeline};
 use register::RegisterFile;
 use stages;
 
 
 /// IF: Instruction fetch from memory.
 pub fn insn_fetch(
-    read_pipeline: &Pipeline,
     write_pipeline: &mut Pipeline,
     insns: &InstructionMemory,
     reg: &mut RegisterFile,
 ) {
-    if load_hazard(&read_pipeline) {
-        return;
-    }
-
     // Read and increment program counter
     let pc = reg.pc.read() as usize;
     let npc = (pc + consts::WORD_SIZE) as u32;
@@ -42,11 +36,6 @@ pub fn insn_decode(
     write_pipeline: &mut Pipeline,
     reg: &mut RegisterFile,
 ) {
-    if load_hazard(&read_pipeline) {
-        write_pipeline.id_ex.insn = Instruction::default(); // NOP
-        return;
-    }
-
     // ID: Instruction decode and register file read
     let raw_insn = read_pipeline.if_id.raw_insn;
     let insn = stages::insn_decode(raw_insn);
@@ -98,10 +87,10 @@ pub fn execute(
 
     // ALU src1 mux
     let rs1: i32;
-    if ex_hazard_src1(&read_pipeline) {
+    if hazards::ex_hazard_src1(&read_pipeline) {
         // forward from previous ALU result
         rs1 = read_pipeline.ex_mem.alu_result;
-    } else if mem_hazard_src1(&read_pipeline) {
+    } else if hazards::mem_hazard_src1(&read_pipeline) {
         rs1 = match read_pipeline.mem_wb.insn.semantics.mem_read {
             // forward data memory
             true => read_pipeline.mem_wb.mem_result as i32,
@@ -114,10 +103,10 @@ pub fn execute(
 
     // ALU src2 mux
     let rs2: i32;
-    if ex_hazard_src2(&read_pipeline) {
+    if hazards::ex_hazard_src2(&read_pipeline) {
         // forward previous ALU result
         rs2 = read_pipeline.ex_mem.alu_result;
-    } else if mem_hazard_src2(&read_pipeline) {
+    } else if hazards::mem_hazard_src2(&read_pipeline) {
         rs2 = match read_pipeline.mem_wb.insn.semantics.mem_read {
             // forward data memory
             true => read_pipeline.mem_wb.mem_result as i32,
@@ -131,14 +120,20 @@ pub fn execute(
     let alu_result = stages::execute(&mut insn, rs1, rs2);
 
     // Modify program counter for branch or jump
+    let pc_src: PcSrc;
     if insn.semantics.branch &&
         !(insn.opcode == Opcode::Branch && alu_result != 0)
     {
         let imm = insn.fields.imm.unwrap() as i32;
+
         npc = match insn.opcode {
             Opcode::Jalr => alu_result & 0xfffe, // LSB -> 0
             _ => (pc as i32) + imm,
         } as u32;
+
+        pc_src = PcSrc::Branch;
+    } else {
+        pc_src = PcSrc::Next;
     }
 
     if insn.function == Function::Halt {
@@ -149,6 +144,7 @@ pub fn execute(
     write_pipeline.ex_mem.insn = read_pipeline.id_ex.insn;
     write_pipeline.ex_mem.alu_result = alu_result;
     write_pipeline.ex_mem.rs2 = rs2;
+    write_pipeline.ex_mem.pc_src = pc_src;
 
     None
 }
