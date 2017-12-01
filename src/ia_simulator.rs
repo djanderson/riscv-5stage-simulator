@@ -1,7 +1,7 @@
 //! Single cycle instruction accurate RISC-V 32I simulator.
 
 
-use consts::WORD_SIZE;
+use consts;
 use instruction::{Function, Opcode};
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
@@ -19,8 +19,8 @@ pub fn run(instructions: &InstructionMemory) -> u32 {
 
     loop {
         // Read and increment program counter
-        let pc = reg.pc.read() as usize;
-        reg.pc.write((pc + WORD_SIZE) as u32);
+        let pc = reg.pc.read();
+        reg.pc.write(pc + consts::WORD_SIZE as u32);
 
         // IF: Instruction fetch
         let raw_insn = stages::insn_fetch(instructions, pc);
@@ -37,7 +37,7 @@ pub fn run(instructions: &InstructionMemory) -> u32 {
             stages::access_memory(&insn, &mut mem, alu_result, rs2);
 
         // WB: Write result back to register
-        stages::reg_writeback(&insn, &mut reg, alu_result, mem_result);
+        stages::reg_writeback(pc, &insn, &mut reg, alu_result, mem_result);
 
         if insn.function == Function::Halt {
             println!("Caught halt instruction at {:#0x}, exiting...", pc);

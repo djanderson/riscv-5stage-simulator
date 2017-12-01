@@ -31,8 +31,8 @@ impl Pipeline {
 /// Pipeline register between instruction fetch and instruction decode stages.
 #[derive(Clone, Copy, Debug)]
 pub struct IfIdRegister {
-    /// Next PC
-    pub npc: u32,
+    /// Program Counter
+    pub pc: u32,
 
     /// Raw instruction
     pub raw_insn: u32,
@@ -42,7 +42,7 @@ pub struct IfIdRegister {
 impl IfIdRegister {
     pub fn new() -> IfIdRegister {
         IfIdRegister {
-            npc: 0,
+            pc: 0,
             raw_insn: 0x00_00_00_13, // NOP
         }
     }
@@ -52,7 +52,7 @@ impl IfIdRegister {
 /// Pipeline register between instruction decode and execution stages.
 #[derive(Clone, Copy, Debug)]
 pub struct IdExRegister {
-    pub npc: u32,
+    pub pc: u32,
     pub insn: Instruction,
     pub rs1: i32,
     pub rs2: i32,
@@ -62,7 +62,7 @@ pub struct IdExRegister {
 impl IdExRegister {
     pub fn new() -> IdExRegister {
         IdExRegister {
-            npc: 0,
+            pc: 0,
             insn: Instruction::default(),
             rs1: 0,
             rs2: 0,
@@ -74,22 +74,20 @@ impl IdExRegister {
 /// Pipeline register between execution and memory stages.
 #[derive(Clone, Copy, Debug)]
 pub struct ExMemRegister {
-    pub npc: u32,
+    pub pc: u32,
     pub insn: Instruction,
     pub alu_result: i32,
     pub rs2: i32,
-    pub pc_src: PcSrc,
 }
 
 
 impl ExMemRegister {
     pub fn new() -> ExMemRegister {
         ExMemRegister {
-            npc: 0,
+            pc: 0,
             insn: Instruction::default(),
             alu_result: 0,
             rs2: 0,
-            pc_src: PcSrc::Next,
         }
     }
 }
@@ -98,6 +96,7 @@ impl ExMemRegister {
 /// Pipeline register between memory and writeback stages.
 #[derive(Clone, Copy, Debug)]
 pub struct MemWbRegister {
+    pub pc: u32,
     pub insn: Instruction,
     pub alu_result: i32,
     pub mem_result: u32,
@@ -107,19 +106,10 @@ pub struct MemWbRegister {
 impl MemWbRegister {
     pub fn new() -> MemWbRegister {
         MemWbRegister {
+            pc: 0,
             insn: Instruction::default(),
             alu_result: 0,
             mem_result: 0,
         }
     }
-}
-
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum PcSrc {
-    /// PC + 4
-    Next,
-
-    /// Branch target
-    Branch,
 }

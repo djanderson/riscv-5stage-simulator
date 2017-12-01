@@ -3,10 +3,10 @@
 
 use consts;
 use hazards;
-use instruction::{Function, Opcode};
+use instruction::{Function, Instruction, Opcode};
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
-use pipeline::{PcSrc, Pipeline};
+use pipeline::Pipeline;
 use register::RegisterFile;
 use stages;
 
@@ -18,14 +18,14 @@ pub fn insn_fetch(
     reg: &mut RegisterFile,
 ) {
     // Read and increment program counter
-    let pc = reg.pc.read() as usize;
-    let npc = (pc + consts::WORD_SIZE) as u32;
+    let pc = reg.pc.read();
+    let npc = pc + consts::WORD_SIZE as u32;
     reg.pc.write(npc);
 
     // IF: Instruction fetch
     let raw_insn = stages::insn_fetch(insns, pc);
 
-    write_pipeline.if_id.npc = npc;
+    write_pipeline.if_id.pc = pc;
     write_pipeline.if_id.raw_insn = raw_insn;
 }
 
@@ -40,13 +40,14 @@ pub fn insn_decode(
     let raw_insn = read_pipeline.if_id.raw_insn;
     let insn = stages::insn_decode(raw_insn);
 
-    write_pipeline.id_ex.npc = read_pipeline.if_id.npc;
+    write_pipeline.id_ex.pc = read_pipeline.if_id.pc;
     write_pipeline.id_ex.insn = insn;
 
-
     // Do register forwarding (see Patterson & Hennessy pg 301)
+    // Note: Had to also add logic to not try to forward writes to x0.
     let rs1: i32;
-    if write_pipeline.mem_wb.insn.semantics.reg_write &&
+    if insn.fields.rs1 != Some(0) &&
+        write_pipeline.mem_wb.insn.semantics.reg_write &&
         (write_pipeline.mem_wb.insn.fields.rd == insn.fields.rs1)
     {
         rs1 = match write_pipeline.mem_wb.insn.semantics.mem_read {
@@ -58,7 +59,8 @@ pub fn insn_decode(
     }
 
     let rs2: i32;
-    if write_pipeline.mem_wb.insn.semantics.reg_write &&
+    if insn.fields.rs1 != Some(0) &&
+        write_pipeline.mem_wb.insn.semantics.reg_write &&
         (write_pipeline.mem_wb.insn.fields.rd == insn.fields.rs2)
     {
         rs2 = match write_pipeline.mem_wb.insn.semantics.mem_read {
@@ -74,15 +76,12 @@ pub fn insn_decode(
 }
 
 
-
 /// EX: Execute operation or calculate address.
 pub fn execute(
     read_pipeline: &Pipeline,
     write_pipeline: &mut Pipeline,
 ) -> Option<usize> {
-    let mut npc = read_pipeline.id_ex.npc;
-
-    let pc = if npc == 0 { 0 } else { npc - 4 };
+    let pc = read_pipeline.id_ex.pc;
     let mut insn = read_pipeline.id_ex.insn;
 
     // ALU src1 mux
@@ -119,32 +118,14 @@ pub fn execute(
 
     let alu_result = stages::execute(&mut insn, rs1, rs2);
 
-    // Modify program counter for branch or jump
-    let pc_src: PcSrc;
-    if insn.semantics.branch &&
-        !(insn.opcode == Opcode::Branch && alu_result != 0)
-    {
-        let imm = insn.fields.imm.unwrap() as i32;
-
-        npc = match insn.opcode {
-            Opcode::Jalr => alu_result & 0xfffe, // LSB -> 0
-            _ => (pc as i32) + imm,
-        } as u32;
-
-        pc_src = PcSrc::Branch;
-    } else {
-        pc_src = PcSrc::Next;
-    }
-
     if insn.function == Function::Halt {
         return Some(pc as usize);
     }
 
-    write_pipeline.ex_mem.npc = npc;
+    write_pipeline.ex_mem.pc = pc;
     write_pipeline.ex_mem.insn = read_pipeline.id_ex.insn;
     write_pipeline.ex_mem.alu_result = alu_result;
     write_pipeline.ex_mem.rs2 = rs2;
-    write_pipeline.ex_mem.pc_src = pc_src;
 
     None
 }
@@ -155,12 +136,34 @@ pub fn access_memory(
     read_pipeline: &Pipeline,
     write_pipeline: &mut Pipeline,
     mut mem: &mut DataMemory,
+    reg: &mut RegisterFile,
 ) {
+    let pc = read_pipeline.ex_mem.pc;
     let insn = read_pipeline.ex_mem.insn;
     let alu_result = read_pipeline.ex_mem.alu_result;
     let rs2 = read_pipeline.ex_mem.rs2;
     let mem_result = stages::access_memory(&insn, &mut mem, alu_result, rs2);
 
+    // Modify program counter for branch or jump
+    if insn.semantics.branch &&
+        !(insn.opcode == Opcode::Branch && alu_result != 0)
+    {
+        let imm = insn.fields.imm.unwrap() as i32;
+        let npc = match insn.opcode {
+            Opcode::Jalr => alu_result & 0xfffe, // LSB -> 0
+            _ => (pc as i32) + imm,
+        } as u32;
+
+        reg.pc.write(npc);
+
+        // Branching - flush
+        println!("Branching - {:#0x} -> {:#0x} flush", pc, npc);
+        write_pipeline.if_id.raw_insn = consts::NOP;
+        write_pipeline.id_ex.insn = Instruction::default(); // NOP
+        write_pipeline.ex_mem.insn = Instruction::default(); // NOP
+    }
+
+    write_pipeline.mem_wb.pc = pc;
     write_pipeline.mem_wb.insn = insn;
     write_pipeline.mem_wb.alu_result = alu_result;
     write_pipeline.mem_wb.mem_result = mem_result;
@@ -169,9 +172,10 @@ pub fn access_memory(
 
 /// WB: Write result back to register.
 pub fn reg_writeback(read_pipeline: &Pipeline, mut reg: &mut RegisterFile) {
+    let pc = read_pipeline.mem_wb.pc;
     let insn = read_pipeline.mem_wb.insn;
     let alu_result = read_pipeline.mem_wb.alu_result;
     let mem_result = read_pipeline.mem_wb.mem_result;
 
-    stages::reg_writeback(&insn, &mut reg, alu_result, mem_result);
+    stages::reg_writeback(pc, &insn, &mut reg, alu_result, mem_result);
 }

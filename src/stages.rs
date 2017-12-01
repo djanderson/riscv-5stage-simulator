@@ -2,6 +2,7 @@
 
 
 use alu::{alu, AluSrc};
+use consts;
 use instruction::{Instruction, Opcode};
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
@@ -9,8 +10,8 @@ use register::RegisterFile;
 
 
 /// IF: Instruction fetch from memory.
-pub fn insn_fetch(mem: &InstructionMemory, pc: usize) -> u32 {
-    mem.read(pc)
+pub fn insn_fetch(mem: &InstructionMemory, pc: u32) -> u32 {
+    mem.read(pc as usize)
 }
 
 
@@ -61,6 +62,7 @@ pub fn access_memory(
 
 /// WB: Write result back to register.
 pub fn reg_writeback(
+    pc: u32,
     insn: &Instruction,
     reg: &mut RegisterFile,
     alu_result: i32,
@@ -68,7 +70,7 @@ pub fn reg_writeback(
 ) {
     if insn.semantics.reg_write {
         let rd = insn.fields.rd.unwrap() as usize;
-        let npc = reg.pc.read() as u32;
+        let npc = pc + consts::WORD_SIZE as u32;
 
         reg.gpr[rd].write(match insn.semantics.mem_to_reg {
             true => mem_result,

@@ -5,7 +5,7 @@ use hazards;
 use instruction::Instruction;
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
-use pipeline::{PcSrc, Pipeline, IfIdRegister, IdExRegister};
+use pipeline::Pipeline;
 use register::RegisterFile;
 
 
@@ -37,19 +37,7 @@ pub fn run(
             return halt_addr;
         }
 
-        reg.pc.write(write_pipeline.ex_mem.npc);
-        if write_pipeline.ex_mem.pc_src == PcSrc::Branch {
-            // Branching - flush
-            println!(
-                "Branching - {:#0x} -> {:#0x} flush",
-                read_pipeline.id_ex.npc - 4,
-                write_pipeline.ex_mem.npc
-            );
-            write_pipeline.if_id = IfIdRegister::new();
-            write_pipeline.id_ex = IdExRegister::new();
-        }
-
-        access_memory(&read_pipeline, &mut write_pipeline, &mut mem);
+        access_memory(&read_pipeline, &mut write_pipeline, &mut mem, &mut reg);
 
         reg_writeback(&read_pipeline, &mut reg);
 
