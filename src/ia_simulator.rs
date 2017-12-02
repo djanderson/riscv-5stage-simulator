@@ -55,6 +55,7 @@ pub fn run(instructions: &InstructionMemory) -> u32 {
                 Opcode::Jalr => alu_result & 0xfffe, // LSB -> 0
                 _ => (pc as i32) + imm,
             };
+            println!("Branching - {:#0x} -> {:#0x}", pc, npc);
             reg.pc.write(npc as u32);
         }
 

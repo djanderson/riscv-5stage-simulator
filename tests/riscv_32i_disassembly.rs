@@ -38,6 +38,19 @@ fn test_ia_simulator_riscv_32i_disassembly_2() {
 }
 
 
+/// Tests instruction-accurate simulator all sorting algorithm.
+#[test]
+fn test_ia_simulator_riscv_32i_sorting_disassembly() {
+    let filename = "tests/riscv_32i_sorting_disassembly.txt";
+    let f = File::open(filename).unwrap();
+    let instructions = DisassemblyInstructionMemory::new(&f);
+    let halt_addr = ia_simulator::run(&instructions);
+    let expected_halt_addr: u32 = 0xd8;
+
+    assert_eq!(halt_addr, expected_halt_addr);
+}
+
+
 /// Tests cycle-accurate simulator on most common instructions.
 #[test]
 fn test_ca_simulator_riscv_32i_disassembly_1() {
@@ -63,6 +76,21 @@ fn test_ca_simulator_riscv_32i_disassembly_2() {
     let mut reg = RegisterFile::new(0x0);
     let halt_addr = ca_simulator::run(&insns, &mut mem, &mut reg);
     let expected_halt_addr = 0x56c;
+
+    assert_eq!(halt_addr, expected_halt_addr);
+}
+
+
+/// Tests cycle-accurate simulator on sorting algorithm.
+#[test]
+fn test_ca_simulator_riscv_32i_sorting_disassembly() {
+    let filename = "tests/riscv_32i_sorting_disassembly.txt";
+    let f = File::open(filename).unwrap();
+    let insns = DisassemblyInstructionMemory::new(&f);
+    let mut mem = DataMemory::new(1024);
+    let mut reg = RegisterFile::new(0x0);
+    let halt_addr = ca_simulator::run(&insns, &mut mem, &mut reg);
+    let expected_halt_addr = 0xd8;
 
     assert_eq!(halt_addr, expected_halt_addr);
 }
