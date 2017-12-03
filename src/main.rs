@@ -42,7 +42,7 @@ fn main() {
     let program_name = &args[0];
 
     let instructions: DisassemblyInstructionMemory;
-    let mut data_memory = DataMemory::new(1024);
+    let mut data_memory = DataMemory::new(8192);
     let mut registers = RegisterFile::new(0x0);
 
     if let Some(filename) = args.get(1) {
