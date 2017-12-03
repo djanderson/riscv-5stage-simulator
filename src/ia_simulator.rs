@@ -13,17 +13,18 @@ use stages;
 ///
 /// Returns the PC address of the HALT instruction.
 ///
-pub fn run(instructions: &InstructionMemory) -> u32 {
-    let mut mem = DataMemory::new(1024);
-    let mut reg = RegisterFile::new(0x0);
-
+pub fn run(
+    insns: &InstructionMemory,
+    mut mem: &mut DataMemory,
+    mut reg: &mut RegisterFile,
+) -> usize {
     loop {
         // Read and increment program counter
         let pc = reg.pc.read();
         reg.pc.write(pc + consts::WORD_SIZE as u32);
 
         // IF: Instruction fetch
-        let raw_insn = stages::insn_fetch(instructions, pc);
+        let raw_insn = stages::insn_fetch(insns, pc);
 
         // ID: Instruction decode and register file read
         let mut insn = stages::insn_decode(raw_insn);
@@ -41,10 +42,8 @@ pub fn run(instructions: &InstructionMemory) -> u32 {
 
         if insn.function == Function::Halt {
             println!("Caught halt instruction at {:#0x}, exiting...", pc);
-            return pc as u32;
+            return pc as usize;
         }
-
-        //println!("{:#0x} - {:?}", pc, insn);
 
         // Modify program counter for branch or jump
         if insn.semantics.branch &&
