@@ -61,7 +61,7 @@ pub fn insn_decode(
     }
 
     let rs2: i32;
-    if insn.fields.rs1 != Some(0) &&
+    if insn.fields.rs2 != Some(0) &&
         write_pipeline.mem_wb.insn.semantics.reg_write &&
         (write_pipeline.mem_wb.insn.fields.rd == insn.fields.rs2)
     {
