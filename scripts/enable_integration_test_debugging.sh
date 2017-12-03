@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copy resources files into the target directory so that integration tests can
+# Copy resource files into the target directory so that integration tests can
 # be run in the debugger.
 #
 # You must first create the build directory with `cargo run` or `cargo test`.
