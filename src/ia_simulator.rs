@@ -58,7 +58,9 @@ pub fn run(
                 Opcode::Jalr => alu_result & 0xfffe, // LSB -> 0
                 _ => (pc as i32) + imm,
             };
+
             trace!("Jump: {:#0x} -> {:#0x} (clock {})", pc, npc, clock);
+
             reg.pc.write(npc as u32);
         }
 

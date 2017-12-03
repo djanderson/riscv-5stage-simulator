@@ -77,7 +77,7 @@ pub fn execute(
     read_pipeline: &Pipeline,
     write_pipeline: &mut Pipeline,
     _clk: u64,
-) -> Option<usize> {
+) {
     let pc = read_pipeline.id_ex.pc;
     let mut insn = read_pipeline.id_ex.insn;
 
@@ -112,7 +112,6 @@ pub fn execute(
     // ALU src2 mux
     let rs2: i32;
     if hazards::ex_hazard_src2(&read_pipeline) {
-        // forward previous ALU result
         rs2 = read_pipeline.ex_mem.alu_result;
         trace!(
             "Hazard: rs2 = {} forwarded from EX/MEM ALU result (clock {})",
@@ -141,15 +140,13 @@ pub fn execute(
     let alu_result = stages::execute(&mut insn, rs1, rs2, _clk);
 
     if insn.function == Function::Halt {
-        return Some(pc as usize);
+        write_pipeline.ex_mem.halt_addr = Some(pc as usize);
     }
 
     write_pipeline.ex_mem.pc = pc;
     write_pipeline.ex_mem.insn = read_pipeline.id_ex.insn;
     write_pipeline.ex_mem.alu_result = alu_result;
     write_pipeline.ex_mem.rs2 = rs2;
-
-    None
 }
 
 
@@ -185,6 +182,7 @@ pub fn access_memory(
         write_pipeline.if_id.raw_insn = consts::NOP;
         write_pipeline.id_ex.insn = Instruction::default(); // NOP
         write_pipeline.ex_mem.insn = Instruction::default(); // NOP
+        write_pipeline.ex_mem.halt_addr = None;
     }
 
     write_pipeline.mem_wb.pc = pc;

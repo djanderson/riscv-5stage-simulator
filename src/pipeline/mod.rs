@@ -78,6 +78,7 @@ pub struct ExMemRegister {
     pub insn: Instruction,
     pub alu_result: i32,
     pub rs2: i32,
+    pub halt_addr: Option<usize>,
 }
 
 
@@ -88,6 +89,7 @@ impl ExMemRegister {
             insn: Instruction::default(),
             alu_result: 0,
             rs2: 0,
+            halt_addr: None,
         }
     }
 }

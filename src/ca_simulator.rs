@@ -35,15 +35,7 @@ pub fn run(
             insn_decode(&read_pipeline, &mut write_pipeline, &mut reg, clock);
         }
 
-        if let Some(halt_addr) = execute(
-            &read_pipeline,
-            &mut write_pipeline,
-            clock,
-        )
-        {
-            info!("Halt: {:#0x} (clock {}), exiting...", halt_addr, clock);
-            return halt_addr;
-        }
+        execute(&read_pipeline, &mut write_pipeline, clock);
 
         access_memory(
             &read_pipeline,
@@ -52,6 +44,11 @@ pub fn run(
             &mut reg,
             clock,
         );
+
+        if let Some(addr) = write_pipeline.ex_mem.halt_addr {
+            info!("Halt: {:#0x} (clock {}), exiting...", addr, clock);
+            return addr;
+        }
 
         reg_writeback(&read_pipeline, &mut reg, clock);
 
