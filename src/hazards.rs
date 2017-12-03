@@ -2,6 +2,7 @@
 
 
 use consts::{RS1_MASK, RS1_SHIFT, RS2_MASK, RS2_SHIFT};
+use instruction::Instruction;
 use pipeline::Pipeline;
 
 
@@ -60,4 +61,22 @@ pub fn load_hazard(pl: &Pipeline) -> bool {
     pl.id_ex.insn.semantics.mem_read &&
         ((pl.id_ex.insn.fields.rd == if_id_rs1) ||
              (pl.id_ex.insn.fields.rd == if_id_rs2))
+}
+
+
+/// Indicates src1 register was just written to and should be forwarded.
+///
+/// See Patterson & Hennessy pg 301.
+pub fn reg_hazard_src1(insn: &Instruction, pl: &Pipeline) -> bool {
+    insn.fields.rs1 != Some(0) && pl.mem_wb.insn.semantics.reg_write &&
+        (pl.mem_wb.insn.fields.rd == insn.fields.rs1)
+}
+
+
+/// Indicates src2 register was just written to and should be forwarded.
+///
+/// See Patterson & Hennessy pg 301.
+pub fn reg_hazard_src2(insn: &Instruction, pl: &Pipeline) -> bool {
+    insn.fields.rs2 != Some(0) && pl.mem_wb.insn.semantics.reg_write &&
+        (pl.mem_wb.insn.fields.rd == insn.fields.rs2)
 }

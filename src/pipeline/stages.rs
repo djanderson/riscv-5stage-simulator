@@ -48,10 +48,7 @@ pub fn insn_decode(
     // Do register forwarding (see Patterson & Hennessy pg 301)
     // Note: Had to also add logic to not try to forward writes to x0.
     let rs1: i32;
-    if insn.fields.rs1 != Some(0) &&
-        write_pipeline.mem_wb.insn.semantics.reg_write &&
-        (write_pipeline.mem_wb.insn.fields.rd == insn.fields.rs1)
-    {
+    if hazards::reg_hazard_src1(&insn, write_pipeline) {
         rs1 = match write_pipeline.mem_wb.insn.semantics.mem_read {
             true => write_pipeline.mem_wb.mem_result as i32,
             false => write_pipeline.mem_wb.alu_result,
@@ -61,10 +58,7 @@ pub fn insn_decode(
     }
 
     let rs2: i32;
-    if insn.fields.rs2 != Some(0) &&
-        write_pipeline.mem_wb.insn.semantics.reg_write &&
-        (write_pipeline.mem_wb.insn.fields.rd == insn.fields.rs2)
-    {
+    if hazards::reg_hazard_src2(&insn, write_pipeline) {
         rs2 = match write_pipeline.mem_wb.insn.semantics.mem_read {
             true => write_pipeline.mem_wb.mem_result as i32,
             false => write_pipeline.mem_wb.alu_result,
