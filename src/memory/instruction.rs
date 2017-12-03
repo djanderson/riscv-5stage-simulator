@@ -3,9 +3,9 @@
 //! Provides a loader for disassembler output.
 
 
-use consts::HALT;
-
 use regex::{Captures, Regex};
+
+use consts::HALT;
 
 use std::fs::File;
 use std::io::BufRead;

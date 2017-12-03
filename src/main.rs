@@ -1,5 +1,8 @@
-extern crate riscv_5stage_simulator;
+//! A 5-stage pipelining RISC-V 32I simulator.
 
+
+extern crate env_logger;
+extern crate riscv_5stage_simulator;
 
 use riscv_5stage_simulator::ca_simulator;
 use riscv_5stage_simulator::memory::data::DataMemory;
@@ -34,10 +37,13 @@ rrrrrrrrrrrrrrrr      vv      rrrrrrrrrrrrrrrr
 rrrrrrrrrrrrrrrrrr          rrrrrrrrrrrrrrrrrr
 rrrrrrrrrrrrrrrrrrrr      rrrrrrrrrrrrrrrrrrrr
 rrrrrrrrrrrrrrrrrrrrrr  rrrrrrrrrrrrrrrrrrrrrr
+
 ";
 
 
 fn main() {
+    env_logger::init().unwrap();
+
     let args: Vec<String> = env::args().collect();
     let program_name = &args[0];
 

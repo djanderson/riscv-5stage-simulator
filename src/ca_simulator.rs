@@ -6,6 +6,8 @@ use instruction::Instruction;
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
 use pipeline::Pipeline;
+use pipeline::stages::{insn_fetch, insn_decode, execute, access_memory,
+                       reg_writeback};
 use register::RegisterFile;
 
 
@@ -18,7 +20,8 @@ pub fn run(
     mut mem: &mut DataMemory,
     mut reg: &mut RegisterFile,
 ) -> usize {
-    use pipeline::stages::*;
+    // Clock is used to aid debugging only
+    let mut clock: u64 = 0;
 
     // Pipline registers
     let mut write_pipeline = Pipeline::new();
@@ -28,20 +31,33 @@ pub fn run(
         if hazards::load_hazard(&read_pipeline) {
             write_pipeline.id_ex.insn = Instruction::default(); // NOP
         } else {
-            insn_fetch(&mut write_pipeline, insns, &mut reg);
-            insn_decode(&read_pipeline, &mut write_pipeline, &mut reg);
+            insn_fetch(&mut write_pipeline, insns, &mut reg, clock);
+            insn_decode(&read_pipeline, &mut write_pipeline, &mut reg, clock);
         }
 
-        if let Some(halt_addr) = execute(&read_pipeline, &mut write_pipeline) {
-            println!("Caught halt instruction at {:#0x}, exiting", halt_addr);
+        if let Some(halt_addr) = execute(
+            &read_pipeline,
+            &mut write_pipeline,
+            clock,
+        )
+        {
+            info!("Halt: {:#0x} (clock {}), exiting...", halt_addr, clock);
             return halt_addr;
         }
 
-        access_memory(&read_pipeline, &mut write_pipeline, &mut mem, &mut reg);
+        access_memory(
+            &read_pipeline,
+            &mut write_pipeline,
+            &mut mem,
+            &mut reg,
+            clock,
+        );
 
-        reg_writeback(&read_pipeline, &mut reg);
+        reg_writeback(&read_pipeline, &mut reg, clock);
 
         read_pipeline = write_pipeline;
+
+        clock += 1;
     }
 
 }

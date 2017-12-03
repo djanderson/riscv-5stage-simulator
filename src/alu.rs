@@ -5,7 +5,7 @@ use instruction::Instruction;
 
 
 /// Perform one ALU operation.
-pub fn alu(insn: &Instruction, src1: i32, src2: i32) -> i32 {
+pub fn alu(insn: &Instruction, src1: i32, src2: i32, _clk: u64) -> i32 {
     use self::AluOp::*;
 
     let (value, overflow) = match insn.semantics.alu_op {
@@ -38,11 +38,12 @@ pub fn alu(insn: &Instruction, src1: i32, src2: i32) -> i32 {
     };
 
     if overflow {
-        println!(
-            "Detected overflow {} {:?} {}",
+        debug!(
+            "Detected overflow {} {:?} {} (clock {})",
             src1,
             insn.semantics.alu_op,
-            src2
+            src2,
+            _clk
         );
     }
 

@@ -6,7 +6,8 @@ use instruction::{Function, Opcode};
 use memory::data::DataMemory;
 use memory::instruction::InstructionMemory;
 use register::RegisterFile;
-use stages;
+use stages::{insn_fetch, insn_decode, reg_read, execute, access_memory,
+             reg_writeback};
 
 
 /// Runs a single cycle instruction accurate RISC-V 32I simulator.
@@ -18,30 +19,33 @@ pub fn run(
     mut mem: &mut DataMemory,
     mut reg: &mut RegisterFile,
 ) -> usize {
+    // Clock is used to aid debugging only
+    let mut clock: u64 = 0;
+
     loop {
         // Read and increment program counter
         let pc = reg.pc.read();
         reg.pc.write(pc + consts::WORD_SIZE as u32);
 
         // IF: Instruction fetch
-        let raw_insn = stages::insn_fetch(insns, pc);
+        let raw_insn = insn_fetch(insns, pc, clock);
 
         // ID: Instruction decode and register file read
-        let mut insn = stages::insn_decode(raw_insn);
-        let (rs1, rs2) = stages::reg_read(&insn, &reg);
+        let mut insn = insn_decode(raw_insn, clock);
+        let (rs1, rs2) = reg_read(&insn, &reg, clock);
 
         // EX: Execution or address calculation
-        let alu_result = stages::execute(&mut insn, rs1, rs2);
+        let alu_result = execute(&mut insn, rs1, rs2, clock);
 
         // MEM: Data memory access
         let mem_result =
-            stages::access_memory(&insn, &mut mem, alu_result, rs2);
+            access_memory(&insn, &mut mem, alu_result, rs2, clock);
 
         // WB: Write result back to register
-        stages::reg_writeback(pc, &insn, &mut reg, alu_result, mem_result);
+        reg_writeback(pc, &insn, &mut reg, alu_result, mem_result, clock);
 
         if insn.function == Function::Halt {
-            println!("Caught halt instruction at {:#0x}, exiting...", pc);
+            info!("Halt: {:#0x} (clock {}), exiting...", pc, clock);
             return pc as usize;
         }
 
@@ -54,10 +58,11 @@ pub fn run(
                 Opcode::Jalr => alu_result & 0xfffe, // LSB -> 0
                 _ => (pc as i32) + imm,
             };
-            println!("Branching - {:#0x} -> {:#0x}", pc, npc);
+            trace!("Jump: {:#0x} -> {:#0x} (clock {})", pc, npc, clock);
             reg.pc.write(npc as u32);
         }
 
+        clock += 1;
     }
 
 }
