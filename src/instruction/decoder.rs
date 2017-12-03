@@ -245,7 +245,7 @@ fn parse_type_j(insn: u32) -> Fields {
     // insn[31] -> imm[20]
     let imm_bit_20 = (insn & 0x80000000) >> 11;
     // insn[30:21] -> imm[10:1]
-    let imm_low = (insn & 0xff700000) >> 20;
+    let imm_low = (insn & 0x7fe00000) >> 20;
     // insn[20] -> imm[11]
     let imm_bit_11 = (insn & 0x100000) >> 9;
     // isns[19:12] -> imm[19:12]
@@ -361,5 +361,12 @@ mod tests {
         assert_eq!(fields.opcode.unwrap(), 0x6f); // Jal
         assert_eq!(fields.rd.unwrap(), 0x01);
         assert_eq!(fields.imm.unwrap(), 100);
+
+        // jal x0, -136
+        let insn = 0xf79ff06f;
+        let fields = parse_type_j(insn);
+        assert_eq!(fields.opcode.unwrap(), 0x6f); // Jal
+        assert_eq!(fields.rd.unwrap(), 0x0);
+        assert_eq!(fields.imm.unwrap(), 2097016);
     }
 }
