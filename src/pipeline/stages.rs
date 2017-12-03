@@ -157,7 +157,7 @@ pub fn access_memory(
         reg.pc.write(npc);
 
         // Branching - flush
-        println!("Branching - {:#0x} -> {:#0x} flush", pc, npc);
+        println!("Branching - {:#0x} -> {:#0x}", pc, npc);
         write_pipeline.if_id.raw_insn = consts::NOP;
         write_pipeline.id_ex.insn = Instruction::default(); // NOP
         write_pipeline.ex_mem.insn = Instruction::default(); // NOP
