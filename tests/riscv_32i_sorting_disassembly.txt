@@ -303,7 +303,7 @@ fc <alpha_centauri_3>:
      3d4:    00 00 84 63    beq x1 , x0 , sirius_33 /* address 1968(0x7b0) */
 3d8 <canopus_34>:
      3d8:    00 00 80 e7    jalr x1 , canopus_34 /* address 984(0x3d8) */ ( x1 )
-3dc <LBB0_2_C__Users_kgrah_AppData_Local_Temp_exit_73d76e_s>:
+3dc <LBB0_2>:
      3dc:    00 80 05 33    add x10 , x0 , x8
      3e0:    ce df f0 ef    jal x1 , alpha_centauri_19 /* address 1196(0x4ac) */
 3e4 <__call_exitprocs>:
@@ -322,7 +322,7 @@ fc <alpha_centauri_3>:
      410:    00 a1 26 23    sw x10 , 12 ( x2 )
      414:    14 80 a5 03    lw x10 , 328 ( x1 )
      418:    00 00 00 13    addi x0 , x0 , 0
-     41c:    24 05 00 63    beq x10 , x0 , LBB1_4_C__Users_kgrah_AppData_Local_Temp_reent_87a6ab_s /* address 2680(0xa78) */
+     41c:    24 05 00 63    beq x10 , x0 , LBB1_4 /* address 2680(0xa78) */
      420:    14 80 80 93    addi x1 , x1 , 328
 424 <w_cephei_15>:
      424:    00 11 24 23    sw x1 , 8 ( x2 )
@@ -359,7 +359,7 @@ fc <alpha_centauri_3>:
      488:    f0 04 21 83    lw x3 , -256 ( x8 )
      48c:    00 45 22 03    lw x4 , 4 ( x10 )
      490:    00 00 00 13    addi x0 , x0 , 0
-     494:    0e 40 92 63    bne x1 , x4 , LBB0_2_C__Users_kgrah_AppData_Local_Temp_reent_87a6ab_s /* address 2572(0xa0c) */
+     494:    0e 40 92 63    bne x1 , x4 , LBB0_2 /* address 2572(0xa0c) */
      498:    ff f0 80 93    addi x1 , x1 , -1
      49c:    00 15 22 23    sw x1 , 4 ( x10 )
      4a0:    0d c0 00 6f    jal x0 , procyon_40 /* address 2588(0xa1c) */
@@ -457,7 +457,7 @@ fc <alpha_centauri_3>:
      5bc:    00 10 05 b3    add x11 , x0 , x1
 5c0 <rigel_55>:
      5c0:    00 01 80 e7    jalr x1 , rigel_55 /* address 1472(0x5c0) */ ( x3 )
-     5c4:    00 c0 00 6f    jal x0 , LBB0_3_C__Users_kgrah_AppData_Local_Temp_mulsi3_960228_s /* address 2964(0xb94) */
+     5c4:    00 c0 00 6f    jal x0 , LBB0_3 /* address 2964(0xb94) */
 5c8 <LBB0_31_call_atexit_b039bc_s>:
      5c8:    00 10 05 33    add x10 , x0 , x1
 5cc <procyon_56>:
