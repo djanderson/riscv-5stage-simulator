@@ -64,10 +64,10 @@ impl DisassemblyInstructionMemory {
             match regex.captures(&l) {
                 Some(caps) => {
                     let addr = extract_addr(&caps).unwrap();
+                    // Test that addr matches the actual location in memory
+                    assert_eq!(addr, (mem.len() * 4) as u32);
                     let insn = extract_insn(&caps).unwrap();
                     mem.push(insn);
-                    // Test that addr matches the actual location in memory
-                    assert_eq!(addr, ((mem.len() - 1) * 4) as u32);
                 }
                 // Ignore lines that don't match the regex
                 None => {}
@@ -88,9 +88,14 @@ impl InstructionMemory for DisassemblyInstructionMemory {
     ///
     fn read(&self, addr: usize) -> u32 {
         let word_addr = addr >> 2;
+        let byte_offset = addr & 0x3;
 
         if word_addr >= self.mem.len() {
-            panic!("Address 0x{:0x} out of range", addr);
+            panic!("Address {:#0x} out of range", addr);
+        }
+
+        if byte_offset != 0 {
+            panic!("Unaligned memory access at {:#0x}", addr);
         }
 
         self.mem[word_addr]
@@ -117,9 +122,14 @@ impl InstructionMemory for TestInstructionMemory {
     ///
     fn read(&self, addr: usize) -> u32 {
         let word_addr = addr >> 2;
+        let byte_offset = addr & 0x3;
 
         if word_addr >= self.mem.len() {
-            panic!("Address 0x{:0x} out of range", addr);
+            panic!("Address {:#0x} out of range", addr);
+        }
+
+        if byte_offset != 0 {
+            panic!("Unaligned memory access at {:#0x}", addr);
         }
 
         self.mem[word_addr]

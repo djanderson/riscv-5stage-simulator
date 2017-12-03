@@ -23,11 +23,11 @@ impl DataMemory {
         let byte_offset_in_bits = 8 * byte_offset;
 
         if word_addr >= self.mem.len() {
-            panic!("Address 0x{:0x} out of range", word_addr);
+            panic!("Address {:#0x} out of range", word_addr);
         }
 
         if byte_offset + size > 4 {
-            panic!("Unaligned memory access");
+            panic!("Unaligned memory access at {:#0x}", addr);
         }
 
         let word = self.mem[word_addr] >> byte_offset_in_bits;
@@ -48,7 +48,7 @@ impl DataMemory {
         let byte_offset_in_bits = 8 * byte_offset;
 
         if word_addr >= self.mem.len() {
-            panic!("Address 0x{:0x} out of range", word_addr);
+            panic!("Address {:#0x} out of range", word_addr);
         }
 
         if byte_offset + size > 4 {
