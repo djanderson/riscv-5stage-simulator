@@ -61,5 +61,8 @@ fn main() {
 
     println!("{}", LOGO);
 
-    ca_simulator::run(&instructions, &mut data_memory, &mut registers);
+    let halt_addr =
+        ca_simulator::run(&instructions, &mut data_memory, &mut registers);
+
+    println!("Caught HALT instruction at {:#0x}, exiting...", halt_addr);
 }
