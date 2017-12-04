@@ -150,7 +150,7 @@ and Design RISC-V Edition by Patterson and Hennessy.
 
 Currently, integration tests are loaded via a disassembly loader that parses a
 given disassembly file and populates the instruction memory. The loader adds a
-special `HALT` instruction at the end, and the simulator return the address of
+special `HALT` instruction at the end, and the simulator returns the address of
 the first `HALT` instruction that it hits. Integration tests pass or fail based
 on this address. The following integration tests are passing for both IA and CA
 simulators:
