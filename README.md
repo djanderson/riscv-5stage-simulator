@@ -115,3 +115,10 @@ Control and status registers
  - [ ] CSRRWI
  - [ ] CSRRSI
  - [ ] CSRRCI
+
+
+## Licence
+
+Copyright 2017 Douglas Anderson <douglas.anderson-1@colorado.edu>. Released
+under GPL 3 _except for the 3 disassembly files in tests/ which are copyright
+their respective authors and not covered under this license._
