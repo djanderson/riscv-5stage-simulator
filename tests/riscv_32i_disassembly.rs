@@ -18,9 +18,7 @@ static INIT: Once = ONCE_INIT;
 
 /// Sets up logging subsystem once even if called multiple times
 fn setup_logger() {
-    INIT.call_once(|| {
-        env_logger::init().unwrap();
-    });
+    INIT.call_once(|| { env_logger::init().unwrap(); });
 }
 
 
