@@ -5,9 +5,9 @@
 
 RISC-V 5-Stage Pipeline Simulator is a 32-bit integer instuction set
 architecture (ISA) and pipelining RISC-V simulator written in Rust. It was
-written for ECEN 4593 - Computer Organization at CU Boulder. The simulator is
-based on the design in the book Computer Organization and Design RISC-V Edition
-by Patterson and Hennessy.
+written for ECEN 4593 - Computer Organization at the University of Colorado -
+Boulder. The simulator is based on the design in the book Computer Organization
+and Design RISC-V Edition by Patterson and Hennessy.
 
 <p align="center">
   <img src="/docs/rusty_pipes.jpg">
@@ -57,7 +57,7 @@ by Patterson and Hennessy.
     Caught HALT instruction at 0xd8, exiting...
     ```
 
-### Debugging a failing test
+### Debugging a test
 
  1) Run the test and note the name of the exectutable
 
