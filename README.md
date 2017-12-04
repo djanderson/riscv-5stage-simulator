@@ -18,11 +18,13 @@ by Patterson and Hennessy.
 
 ### General usage:
 
- 1) Follow instructions at [rustup.rs](rustup-link) to install Rust stable for your platform.
+ 1) Follow instructions at [rustup.rs](https://rustup.rs/) to install Rust stable for your platform.
  2) Run all tests: `cargo test`
  3) Run a specific test: `cargo test ca_simulator_riscv_32i_sorting`
- 4) Run the CA simulator against a disassembly file: `cargo run tests/riscv_32i_sorting_disassembly.txt`
+ 4) Run the CA simulator against a disassembly file:
 
+    ```bash
+    $ cargo run tests/riscv_32i_sorting_disassembly.txt
        Compiling riscv-5stage-simulator v0.1.0 (file:///[...]/git/riscv-5stage-simulator)
         Finished dev [unoptimized + debuginfo] target(s) in 0.66 secs
          Running `target/debug/casim tests/riscv_32i_sorting_disassembly.txt`
@@ -53,11 +55,13 @@ by Patterson and Hennessy.
 
 
     Caught HALT instruction at 0xd8, exiting...
+    ```
 
 ### Debugging a failing test
 
  1) Run the test and note the name of the exectutable
 
+    ```bash
     $ cargo test ca_simulator_riscv_32i_sorting
     ...
          Running target/debug/deps/riscv_32i_disassembly-a87e2e4f7ca5fb9b
@@ -65,6 +69,7 @@ by Patterson and Hennessy.
     running 1 test
     test test_ca_simulator_riscv_32i_sorting_disassembly ... ok
     ...
+    ```
 
  2) Run with different log levels (warn, info, debug, trace)
 
@@ -125,8 +130,6 @@ by Patterson and Hennessy.
         reg=0x7ffff69fe440) at src/ca_simulator.rs:30
     ...
     ```
-
-  [rustup-link]: https://rustup.rs/
 
 
 ## Implemented Execution Models
