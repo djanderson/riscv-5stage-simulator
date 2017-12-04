@@ -1,7 +1,7 @@
 # RISC-V 5-Stage Pipeline Simulator [![Travis CI Build Status][travis-badge]][travis-link]
 
-    [travis-link]: https://travis-ci.org/djanderson/riscv-5stage-simulator
-    [travis-badge]: https://travis-ci.org/djanderson/riscv-5stage-simulator.svg?branch=master
+  [travis-link]: https://travis-ci.org/djanderson/riscv-5stage-simulator
+  [travis-badge]: https://travis-ci.org/djanderson/riscv-5stage-simulator.svg?branch=master
 
 RISC-V 5-Stage Pipeline Simulator is a 32-bit integer instuction set
 architecture (ISA) and pipelining RISC-V simulator written in Rust. It was
@@ -9,7 +9,8 @@ written for ECEN 4593 - Computer Organization at CU Boulder. The simulator is
 based on the design in the book Computer Organization and Design RISC-V Edition
 by Patterson and Hennessy.
 
-![Photo of rusty pipes](/docs/rusty_pipes.jpg)
+
+<img src="/docs/rusty_pipes.jpg" align=center>
 
 
 ## Implemented Execution Models
@@ -38,6 +39,9 @@ simulators:
  - [X] RISCV_32I_DISASSEMBLY_1
  - [X] RISCV_32I_DISASSEMBLY_2
  - [X] RISCV_32I_SORTING_DISASSEMBLY
+
+In addition, there are ~30 unit tests within implementation files that test
+more specific features.
 
 
 ## Implemented Instructions
