@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 # Copy resource files into the target directory so that integration tests can
 # be run in the debugger.
 #
