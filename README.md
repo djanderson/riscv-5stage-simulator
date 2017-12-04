@@ -92,6 +92,11 @@ and Design RISC-V Edition by Patterson and Hennessy.
  3) Attach GDB
 
     ```bash
+    $ ./scripts/enable_integration_test_debugging.sh
+    Created the following files:
+    ./target/debug/tests/riscv_32i_disassembly_1.txt
+    ./target/debug/tests/riscv_32i_disassembly_2.txt
+    ./target/debug/tests/riscv_32i_sorting_disassembly.txt
     $ rust-gdb ./target/debug/riscv_32i_disassembly-a87e2e4f7ca5fb9b
     [...]
     Reading symbols from ./target/debug/riscv_32i_disassembly-a87e2e4f7ca5fb9b...done.
