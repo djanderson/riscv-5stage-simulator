@@ -9,9 +9,9 @@ written for ECEN 4593 - Computer Organization at CU Boulder. The simulator is
 based on the design in the book Computer Organization and Design RISC-V Edition
 by Patterson and Hennessy.
 
-
-<img src="/docs/rusty_pipes.jpg" align=center>
-
+<p align="center">
+  <img src="/docs/rusty_pipes.jpg">
+</p>
 
 ## Implemented Execution Models
 
