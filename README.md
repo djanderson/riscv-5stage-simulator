@@ -13,6 +13,19 @@ by Patterson and Hennessy.
   <img src="/docs/rusty_pipes.jpg">
 </p>
 
+
+## Quickstart
+
+General usage:
+
+ 1) Follow instructions at [rustup.rs](rustup-link) to install Rust stable for your platform.
+ 2) Run all tests: `cargo test`
+ 3) Run a specific test: `cargo test ca_simulator_riscv_32i_sorting`
+ 4) Run the CA simulator against a disassembly file: `cargo run tests/riscv_32i_sorting_disassembly.txt`
+
+  [rustup-link]: https://rustup.rs/
+
+
 ## Implemented Execution Models
 
  - [X] IA (instruction accurate), single cycle simulator
