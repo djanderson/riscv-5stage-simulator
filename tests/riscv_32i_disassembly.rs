@@ -54,7 +54,7 @@ fn test_ia_simulator_riscv_32i_disassembly_2() {
 }
 
 
-/// Tests instruction-accurate simulator all sorting algorithm.
+/// Tests instruction-accurate simulator a sorting algorithm.
 #[test]
 fn test_ia_simulator_riscv_32i_sorting_disassembly() {
     setup_logger();
