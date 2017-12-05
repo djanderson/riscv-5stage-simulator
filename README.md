@@ -1,7 +1,9 @@
-# RISC-V 5-Stage Pipeline Simulator [![Travis CI Build Status][travis-badge]][travis-link]
+# RISC-V 5-Stage Pipeline Simulator [![Travis CI Build Status][travis-badge]][travis-link] [![Rustdoc Build Status][docs-badge]][docs-link]
 
   [travis-link]: https://travis-ci.org/djanderson/riscv-5stage-simulator
   [travis-badge]: https://travis-ci.org/djanderson/riscv-5stage-simulator.svg?branch=master
+  [docs-link]: https://djanderson.github.io/riscv-5stage-simulator
+  [docs-badge]: https://img.shields.io/badge/docs-available-brightgreen.svg
 
 RISC-V 5-Stage Pipeline Simulator is a 32-bit integer instuction set
 architecture (ISA) and pipelining RISC-V simulator written in Rust. It was
