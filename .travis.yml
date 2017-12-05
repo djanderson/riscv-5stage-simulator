@@ -3,7 +3,7 @@ language: rust
 script:
   - cargo build --verbose
   - cargo test --verbose
-  - cargo doc --no-deps
+  - cargo doc --no-deps --release
 
 rust:
   - stable
@@ -20,6 +20,6 @@ deploy:
   provider: pages
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
-  local_dir: target/doc/riscv_5stage_simulator/
+  local_dir: target/doc/
   on:
     branch: master
