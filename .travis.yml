@@ -1,5 +1,10 @@
 language: rust
 
+script:
+  - cargo build --verbose
+  - cargo test --verbose
+  - cargo doc --no-deps
+
 rust:
   - stable
   - beta
@@ -10,3 +15,11 @@ matrix:
     - rust: nightly
 
 cache: cargo
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  local_dir: target/doc/riscv_5stage_simulator/
+  on:
+    branch: master
