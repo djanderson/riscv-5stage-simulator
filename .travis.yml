@@ -4,6 +4,7 @@ script:
   - cargo build --verbose
   - cargo test --verbose
   - cargo doc --no-deps --release
+  - ./scripts/create_ghpages_redirect_index.sh
 
 rust:
   - stable
