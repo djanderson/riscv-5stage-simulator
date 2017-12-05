@@ -9,10 +9,6 @@ written for ECEN 4593 - Computer Organization at the University of Colorado -
 Boulder. The simulator is based on the design in the book Computer Organization
 and Design RISC-V Edition by Patterson and Hennessy.
 
-<p align="center">
-  <img src="/docs/rusty_pipes.jpg">
-</p>
-
 
 ## Quickstart
 
