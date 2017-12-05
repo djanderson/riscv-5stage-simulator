@@ -5,7 +5,7 @@
   [docs-link]: https://djanderson.github.io/riscv-5stage-simulator
   [docs-badge]: https://img.shields.io/badge/docs-available-brightgreen.svg
 
-RISC-V 5-Stage Pipeline Simulator is a 32-bit integer instuction set
+RISC-V 5-Stage Pipeline Simulator is a 32-bit integer instruction set
 architecture (ISA) and pipelining RISC-V simulator written in Rust. It was
 written for ECEN 4593 - Computer Organization at the University of Colorado -
 Boulder. The simulator is based on the design in the book Computer Organization
