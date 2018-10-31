@@ -57,7 +57,7 @@ and Design RISC-V Edition by Patterson and Hennessy.
 
 ### Debugging a test
 
- 1) Run the test and note the name of the exectutable
+ 1) Run the test and note the name of the executable
 
     ```bash
     $ cargo test ca_simulator_riscv_32i_sorting
