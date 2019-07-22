@@ -117,7 +117,7 @@ mod tests {
         assert_eq!(registers.gpr[13].read(), 1); // x13 == 1
         assert_eq!(registers.gpr[14].read(), 2); // x14 == 2
 
-        assert_eq!(data_memory.read(101, consts::HALFWORD_SIZE), 0xffff);
+        assert_eq!(data_memory.read(100, consts::WORD_SIZE), 0x00ffff00);
     }
 
     /// Tests load-use hazard detection and bubble insertion.

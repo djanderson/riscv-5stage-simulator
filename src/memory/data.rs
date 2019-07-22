@@ -26,7 +26,7 @@ impl DataMemory {
             panic!("Address {:#0x} out of range", word_addr);
         }
 
-        if byte_offset + size > 4 {
+        if (addr & (size - 1)) != 0 {
             panic!("Unaligned memory access at {:#0x}", addr);
         }
 
