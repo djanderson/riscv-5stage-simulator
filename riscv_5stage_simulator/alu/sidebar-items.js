@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["AluOp","Available ALU operations."],["AluSrc","Selector for ALU `src2` source."]],"fn":[["alu","Perform one ALU operation."]]});

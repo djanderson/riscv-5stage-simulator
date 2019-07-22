@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Format","RISC-V 32I instruction formats."],["Function","RISC-V 32I mnemonics."],["Opcode","RISC-V 32I opcodes."]],"mod":[["decoder","Decodes RISC-V 32I instructions."]],"struct":[["Fields","RISC-V 32I fields (shamt -> imm)."],["Instruction","A single machine instruction."],["Semantics","Control unit semantics"]]});

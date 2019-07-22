@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["data","A read-write data memory."],["instruction","Read-only instruction memory."]]});

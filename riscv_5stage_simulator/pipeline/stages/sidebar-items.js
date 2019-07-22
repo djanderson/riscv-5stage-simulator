@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["access_memory","MEM: Access memory operand."],["execute","EX: Execute operation or calculate address."],["insn_decode","ID: Instruction decode and register read"],["insn_fetch","IF: Instruction fetch from memory."],["reg_writeback","WB: Write result back to register."]]});

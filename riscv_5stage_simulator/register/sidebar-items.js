@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Register","A write-protectable register."],["RegisterFile","A complete RV32I register file."]]});
