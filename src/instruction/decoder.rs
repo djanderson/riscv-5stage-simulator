@@ -151,7 +151,7 @@ fn insn_to_semantics(insn: &Instruction) -> Semantics {
 /// Parses fields of R-type format instructions.
 fn parse_type_r(insn: u32) -> Fields {
     let mut fields = Fields::default();
-    fields.opcode = Some((insn & OPCODE_MASK));
+    fields.opcode = Some(insn & OPCODE_MASK);
     fields.funct3 = Some((insn & FUNCT3_MASK) >> FUNCT3_SHIFT);
     fields.funct7 = Some((insn & FUNCT7_MASK) >> FUNCT7_SHIFT);
     fields.rs1 = Some((insn & RS1_MASK) >> RS1_SHIFT);
@@ -171,7 +171,7 @@ fn parse_type_i(insn: u32) -> Fields {
     }
 
     let mut fields = Fields::default();
-    fields.opcode = Some((insn & OPCODE_MASK));
+    fields.opcode = Some(insn & OPCODE_MASK);
     fields.funct3 = Some((insn & FUNCT3_MASK) >> FUNCT3_SHIFT);
     fields.rs1 = Some((insn & RS1_MASK) >> RS1_SHIFT);
     fields.rd = Some((insn & RD_MASK) >> RD_SHIFT);
@@ -190,7 +190,7 @@ fn parse_type_i(insn: u32) -> Fields {
 /// Parses fields of S-type format instructions.
 fn parse_type_s(insn: u32) -> Fields {
     let mut fields = Fields::default();
-    fields.opcode = Some((insn & OPCODE_MASK));
+    fields.opcode = Some(insn & OPCODE_MASK);
     fields.funct3 = Some((insn & FUNCT3_MASK) >> FUNCT3_SHIFT);
     fields.rs1 = Some((insn & RS1_MASK) >> RS1_SHIFT);
     fields.rs2 = Some((insn & RS2_MASK) >> RS2_SHIFT);
@@ -207,7 +207,7 @@ fn parse_type_s(insn: u32) -> Fields {
 /// Parses fields of B-type format instructions.
 fn parse_type_b(insn: u32) -> Fields {
     let mut fields = Fields::default();
-    fields.opcode = Some((insn & OPCODE_MASK));
+    fields.opcode = Some(insn & OPCODE_MASK);
     fields.funct3 = Some((insn & FUNCT3_MASK) >> FUNCT3_SHIFT);
     fields.rs1 = Some((insn & RS1_MASK) >> RS1_SHIFT);
     fields.rs2 = Some((insn & RS2_MASK) >> RS2_SHIFT);
@@ -228,7 +228,7 @@ fn parse_type_b(insn: u32) -> Fields {
 /// Parses fields of U-type format instructions.
 fn parse_type_u(insn: u32) -> Fields {
     let mut fields = Fields::default();
-    fields.opcode = Some((insn & OPCODE_MASK));
+    fields.opcode = Some(insn & OPCODE_MASK);
     fields.rd = Some((insn & RD_MASK) >> RD_SHIFT);
     // insn[31:12] -> imm[31:12]
     fields.imm = Some(insn & 0xfffff000);
@@ -240,7 +240,7 @@ fn parse_type_u(insn: u32) -> Fields {
 /// Parses fields of J-type format instructions.
 fn parse_type_j(insn: u32) -> Fields {
     let mut fields = Fields::default();
-    fields.opcode = Some((insn & OPCODE_MASK));
+    fields.opcode = Some(insn & OPCODE_MASK);
     fields.rd = Some((insn & RD_MASK) >> RD_SHIFT);
     // insn[31] -> imm[20]
     let imm_bit_20 = (insn & 0x80000000) >> 11;
