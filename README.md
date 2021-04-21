@@ -1,7 +1,5 @@
-# RISC-V 5-Stage Pipeline Simulator [![Travis CI Build Status][travis-badge]][travis-link] [![Rustdoc Build Status][docs-badge]][docs-link]
+# RISC-V 5-Stage Pipeline Simulator [![Rustdoc Build Status][docs-badge]][docs-link]
 
-  [travis-link]: https://travis-ci.org/djanderson/riscv-5stage-simulator
-  [travis-badge]: https://travis-ci.org/djanderson/riscv-5stage-simulator.svg?branch=master
   [docs-link]: https://djanderson.github.io/riscv-5stage-simulator
   [docs-badge]: https://img.shields.io/badge/docs-available-brightgreen.svg
   
